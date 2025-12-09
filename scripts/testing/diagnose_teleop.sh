@@ -1,87 +1,86 @@
 #!/bin/bash
-# TurtleBot3 Teleop 快速诊断脚本
+# TurtleBot3 Teleop quick diagnostic script
 
 echo "=========================================="
-echo "TurtleBot3 Teleop 诊断工具"
+echo "TurtleBot3 Teleop Diagnostic Tool"
 echo "=========================================="
 echo ""
 
-echo "=== 1. ROS2 环境检查 ==="
+echo "=== 1. ROS2 Environment Check ==="
 if [ -z "$ROS_DISTRO" ]; then
-    echo "❌ ROS_DISTRO 未设置！"
-    echo "   请运行: source /opt/ros/humble/setup.bash (或 jazzy)"
+    echo "❌ ROS_DISTRO not set!"
+    echo "   Please run: source /opt/ros/humble/setup.bash (or jazzy)"
 else
     echo "✅ ROS_DISTRO: $ROS_DISTRO"
 fi
 
 if [ -z "$TURTLEBOT3_MODEL" ]; then
-    echo "❌ TURTLEBOT3_MODEL 未设置！"
-    echo "   请运行: export TURTLEBOT3_MODEL=burger"
+    echo "❌ TURTLEBOT3_MODEL not set!"
+    echo "   Please run: export TURTLEBOT3_MODEL=burger"
 else
     echo "✅ TURTLEBOT3_MODEL: $TURTLEBOT3_MODEL"
 fi
 echo ""
 
-echo "=== 2. 包检查 ==="
+echo "=== 2. Package Check ==="
 if ros2 pkg list | grep -q turtlebot3_teleop; then
-    echo "✅ turtlebot3_teleop 包已安装"
+    echo "✅ turtlebot3_teleop package is installed"
 else
-    echo "❌ turtlebot3_teleop 包未找到！"
-    echo "   请运行: sudo apt install ros-$ROS_DISTRO-turtlebot3-teleop"
+    echo "❌ turtlebot3_teleop package not found!"
+    echo "   Please run: sudo apt install ros-$ROS_DISTRO-turtlebot3-teleop"
 fi
 echo ""
 
-echo "=== 3. 话题检查 ==="
+echo "=== 3. Topic Check ==="
 if ros2 topic list 2>/dev/null | grep -q cmd_vel; then
-    echo "✅ /cmd_vel 话题存在"
-    echo "   话题信息:"
+    echo "✅ /cmd_vel topic exists"
+    echo "   Topic info:"
     ros2 topic info /cmd_vel 2>/dev/null | head -3
 else
-    echo "❌ /cmd_vel 话题不存在！"
-    echo "   请确保 Gazebo 仿真正在运行 (Step 10)"
+    echo "❌ /cmd_vel topic does not exist!"
+    echo "   Please ensure Gazebo simulation is running (Step 10)"
 fi
 echo ""
 
-echo "=== 4. 节点检查 ==="
+echo "=== 4. Node Check ==="
 NODES=$(ros2 node list 2>/dev/null)
 if [ -z "$NODES" ]; then
-    echo "⚠️  没有检测到运行中的节点"
-    echo "   请确保 Gazebo 仿真正在运行 (Step 10)"
+    echo "⚠️  No running nodes detected"
+    echo "   Please ensure Gazebo simulation is running (Step 10)"
 else
-    echo "✅ 检测到以下节点:"
+    echo "✅ Detected the following nodes:"
     echo "$NODES" | head -5
 fi
 echo ""
 
-echo "=== 5. 测试发布命令 ==="
-echo "尝试发布一个测试命令（机器人应该短暂前进）..."
+echo "=== 5. Test Publishing Command ==="
+echo "Attempting to publish a test command (robot should briefly move forward)..."
 ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}" 2>/dev/null
 if [ $? -eq 0 ]; then
-    echo "✅ 命令发布成功！如果机器人移动了，说明接口正常。"
+    echo "✅ Command published successfully! If robot moved, interface is working."
 else
-    echo "❌ 命令发布失败！请检查话题是否存在。"
+    echo "❌ Command publish failed! Please check if topic exists."
 fi
 echo ""
 
-echo "=== 6. 终端模式检查 ==="
+echo "=== 6. Terminal Mode Check ==="
 if [ -t 0 ]; then
-    echo "✅ 终端支持交互式输入"
+    echo "✅ Terminal supports interactive input"
     TERM_MODE=$(stty -g 2>/dev/null)
     if [ $? -eq 0 ]; then
-        echo "   当前终端模式: $TERM_MODE"
+        echo "   Current terminal mode: $TERM_MODE"
     fi
 else
-    echo "⚠️  当前可能不是交互式终端"
-    echo "   如果通过 SSH 连接，建议在虚拟机本地终端运行 teleop_keyboard"
+    echo "⚠️  Current terminal may not be interactive"
+    echo "   If connected via SSH, suggest running teleop_keyboard in VM local terminal"
 fi
 echo ""
 
 echo "=========================================="
-echo "诊断完成！"
+echo "Diagnosis complete!"
 echo ""
-echo "如果所有检查都通过但键盘控制仍不工作，"
-echo "可能是终端输入问题。建议："
-echo "1. 在虚拟机本地终端（非 SSH）运行 teleop_keyboard"
-echo "2. 或使用 ros2 topic pub 命令直接控制（见故障排除指南）"
+echo "If all checks pass but keyboard control still doesn't work,"
+echo "it may be a terminal input issue. Suggestions:"
+echo "1. Run teleop_keyboard in VM local terminal (not SSH)"
+echo "2. Or use ros2 topic pub command for direct control (see troubleshooting guide)"
 echo "=========================================="
-

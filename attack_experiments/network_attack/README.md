@@ -53,13 +53,27 @@ When prompted:
 
 On the **attacker machine**:
 
+**Option A: Interactive Attack (Recommended)**
 ```bash
 cd attack_experiments/network_attack/scripts
-chmod +x launch_attack.sh
+./launch_attack_interactive.sh
+```
+Select attack type from menu and configure parameters.
+
+**Option B: Quick Attack**
+```bash
+cd attack_experiments/network_attack/scripts
+./quick_attack.sh turn_left 50 15
+# Or use defaults: ./quick_attack.sh
+```
+
+**Option C: Original Script**
+```bash
+cd attack_experiments/network_attack/scripts
 ./launch_attack.sh
 ```
 
-Select attack type and watch the robot in Gazebo on the target machine!
+Watch the robot in Gazebo on the target machine!
 
 ## Attack Types
 

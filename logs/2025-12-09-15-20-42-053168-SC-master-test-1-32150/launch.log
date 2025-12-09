@@ -1,0 +1,20 @@
+1765315242.0542066 [INFO] [launch]: All log files can be found below /home/stevenchen/master-test/logs/2025-12-09-15-20-42-053168-SC-master-test-1-32150
+1765315242.0543265 [INFO] [launch]: Default logging verbosity is set to INFO
+1765315242.4315581 [INFO] [gazebo-1]: process started with pid [32153]
+1765315242.4317658 [INFO] [gazebo-2]: process started with pid [32154]
+1765315242.4328513 [INFO] [create-3]: process started with pid [32157]
+1765315242.4329751 [INFO] [parameter_bridge-4]: process started with pid [32158]
+1765315242.4330618 [INFO] [robot_state_publisher-5]: process started with pid [32159]
+1765315242.9362066 [INFO] [create-3]: process has finished cleanly [pid 32157]
+1765315449.9932327 [ERROR] [gazebo-1]: process has died [pid 32153, exit code 139, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -r -s -v2 /opt/ros/jazzy/share/turtlebot3_gazebo/worlds/empty_world.world --force-version 8'].
+1765315449.9941785 [INFO] [launch]: process[gazebo-1] was required: shutting down launched system
+1765315449.9975088 [INFO] [robot_state_publisher-5]: sending signal 'SIGINT' to process[robot_state_publisher-5]
+1765315449.9997139 [INFO] [parameter_bridge-4]: sending signal 'SIGINT' to process[parameter_bridge-4]
+1765315450.0013828 [INFO] [gazebo-2]: sending signal 'SIGINT' to process[gazebo-2]
+1765315450.1427135 [INFO] [robot_state_publisher-5]: process has finished cleanly [pid 32159]
+1765315450.1464069 [INFO] [parameter_bridge-4]: process has finished cleanly [pid 32158]
+1765315454.8209600 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1765315455.0005033 [ERROR] [gazebo-2]: process[gazebo-2] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+1765315455.0019503 [INFO] [gazebo-2]: sending signal 'SIGTERM' to process[gazebo-2]
+1765315455.0033071 [ERROR] [gazebo-2]: process has died [pid 32154, exit code -15, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -g -v2  --force-version 8'].
+1765315455.0037937 [INFO] [launch]: process[gazebo-2] was required: shutting down launched system

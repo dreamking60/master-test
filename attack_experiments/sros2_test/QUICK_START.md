@@ -84,6 +84,8 @@ python3 injection_attack.py --attack-type turn_left --frequency 50
 
 **Expected Result**: Attack fails, cannot discover nodes or publish messages.
 
+**View Attack Logs**: See [HOW_TO_VIEW_ATTACK_LOGS.md](HOW_TO_VIEW_ATTACK_LOGS.md) for detailed instructions on viewing attack logs in ROS2 log files.
+
 ## Verify Security is Active
 
 ### Check Environment Variables

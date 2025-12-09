@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-TurtleBot3 控制测试脚本
-用于替代 teleop_keyboard，直接通过命令行参数控制机器人
+TurtleBot3 control test script
+Alternative to teleop_keyboard, directly control robot via command-line arguments
 """
 
 import rclpy
@@ -15,10 +15,10 @@ class TurtleBotController(Node):
     def __init__(self):
         super().__init__('turtlebot_controller')
         self.publisher = self.create_publisher(TwistStamped, '/cmd_vel', 10)
-        self.get_logger().info('TurtleBot 控制器已启动')
+        self.get_logger().info('TurtleBot controller started')
 
     def _create_twist_stamped(self, linear_x=0.0, angular_z=0.0):
-        """创建 TwistStamped 消息"""
+        """Create TwistStamped message"""
         msg = TwistStamped()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -28,8 +28,8 @@ class TurtleBotController(Node):
         return msg
 
     def move_forward(self, speed=0.2, duration=1.0):
-        """前进"""
-        self.get_logger().info(f'前进 {duration} 秒，速度 {speed}')
+        """Move forward"""
+        self.get_logger().info(f'Moving forward for {duration} seconds at {speed} m/s')
         start_time = time.time()
         while time.time() - start_time < duration:
             msg = self._create_twist_stamped(linear_x=speed)
@@ -38,8 +38,8 @@ class TurtleBotController(Node):
         self.stop()
 
     def move_backward(self, speed=0.2, duration=1.0):
-        """后退"""
-        self.get_logger().info(f'后退 {duration} 秒，速度 {speed}')
+        """Move backward"""
+        self.get_logger().info(f'Moving backward for {duration} seconds at {speed} m/s')
         start_time = time.time()
         while time.time() - start_time < duration:
             msg = self._create_twist_stamped(linear_x=-speed)
@@ -48,8 +48,8 @@ class TurtleBotController(Node):
         self.stop()
 
     def turn_left(self, angular_speed=0.5, duration=1.0):
-        """左转"""
-        self.get_logger().info(f'左转 {duration} 秒，角速度 {angular_speed}')
+        """Turn left"""
+        self.get_logger().info(f'Turning left for {duration} seconds at {angular_speed} rad/s')
         start_time = time.time()
         while time.time() - start_time < duration:
             msg = self._create_twist_stamped(angular_z=angular_speed)
@@ -58,8 +58,8 @@ class TurtleBotController(Node):
         self.stop()
 
     def turn_right(self, angular_speed=0.5, duration=1.0):
-        """右转"""
-        self.get_logger().info(f'右转 {duration} 秒，角速度 {angular_speed}')
+        """Turn right"""
+        self.get_logger().info(f'Turning right for {duration} seconds at {angular_speed} rad/s')
         start_time = time.time()
         while time.time() - start_time < duration:
             msg = self._create_twist_stamped(angular_z=-angular_speed)
@@ -68,17 +68,17 @@ class TurtleBotController(Node):
         self.stop()
 
     def stop(self):
-        """停止"""
-        self.get_logger().info('停止')
+        """Stop"""
+        self.get_logger().info('Stopped')
         msg = self._create_twist_stamped()
         self.publisher.publish(msg)
 
     def spin_attack(self, duration=3.0):
-        """旋转攻击（用于测试）"""
-        self.get_logger().info(f'旋转攻击 {duration} 秒')
+        """Spin attack (for testing)"""
+        self.get_logger().info(f'Spin attack for {duration} seconds')
         start_time = time.time()
         while time.time() - start_time < duration:
-            msg = self._create_twist_stamped(angular_z=2.0)  # 快速旋转
+            msg = self._create_twist_stamped(angular_z=2.0)  # Fast spin
             self.publisher.publish(msg)
             time.sleep(0.1)
         self.stop()
@@ -89,18 +89,18 @@ def main():
     controller = TurtleBotController()
 
     if len(sys.argv) < 2:
-        print("用法:")
-        print("  python3 test_control.py forward [速度] [时长]  # 前进")
-        print("  python3 test_control.py backward [速度] [时长]  # 后退")
-        print("  python3 test_control.py left [角速度] [时长]    # 左转")
-        print("  python3 test_control.py right [角速度] [时长]   # 右转")
-        print("  python3 test_control.py stop                    # 停止")
-        print("  python3 test_control.py spin [时长]             # 旋转攻击")
+        print("Usage:")
+        print("  python3 test_control.py forward [speed] [duration]  # Move forward")
+        print("  python3 test_control.py backward [speed] [duration]  # Move backward")
+        print("  python3 test_control.py left [angular_speed] [duration]    # Turn left")
+        print("  python3 test_control.py right [angular_speed] [duration]   # Turn right")
+        print("  python3 test_control.py stop                    # Stop")
+        print("  python3 test_control.py spin [duration]             # Spin attack")
         print("")
-        print("示例:")
-        print("  python3 test_control.py forward 0.2 2.0  # 以 0.2 m/s 前进 2 秒")
-        print("  python3 test_control.py left 0.5 1.0     # 以 0.5 rad/s 左转 1 秒")
-        print("  python3 test_control.py spin 3.0         # 旋转 3 秒")
+        print("Examples:")
+        print("  python3 test_control.py forward 0.2 2.0  # Move forward at 0.2 m/s for 2 seconds")
+        print("  python3 test_control.py left 0.5 1.0     # Turn left at 0.5 rad/s for 1 second")
+        print("  python3 test_control.py spin 3.0         # Spin for 3 seconds")
         rclpy.shutdown()
         return
 
@@ -129,13 +129,13 @@ def main():
             duration = float(sys.argv[2]) if len(sys.argv) > 2 else 3.0
             controller.spin_attack(duration)
         else:
-            print(f"未知命令: {command}")
-            print("可用命令: forward, backward, left, right, stop, spin")
+            print(f"Unknown command: {command}")
+            print("Available commands: forward, backward, left, right, stop, spin")
     except ValueError as e:
-        print(f"参数错误: {e}")
-        print("请确保速度和时长参数是数字")
+        print(f"Parameter error: {e}")
+        print("Please ensure speed and duration parameters are numbers")
     except KeyboardInterrupt:
-        print("\n中断，停止机器人...")
+        print("\nInterrupted, stopping robot...")
         controller.stop()
     finally:
         rclpy.shutdown()
@@ -143,4 +143,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -90,18 +90,22 @@ echo ">>> ATTACK STARTING NOW! <<<"
 echo "Watch Gazebo - robot should start turning left!"
 echo ""
 
-# Start attack
+# Start attack (save logs to file)
 python3 "$SCRIPT_DIR/injection_attack.py" \
     --attack-type "$ATTACK_TYPE" \
     --frequency "$ATTACK_FREQ" \
     --duration "$ATTACK_DURATION" \
     --angular-speed 0.5 \
-    --node-name "injection_attacker"
+    --node-name "injection_attacker" > /tmp/injection_attack.log 2>&1
+ATTACK_EXIT_CODE=$?
 
 echo ""
 echo "=========================================="
 echo "Attack finished!"
 echo "=========================================="
+echo ""
+echo "Attack logs saved to: /tmp/injection_attack.log"
+echo "View with: cat /tmp/injection_attack.log"
 echo ""
 
 # Wait for everything to finish

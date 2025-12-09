@@ -1,179 +1,194 @@
 # Network Attack Experiment - Step by Step Guide
 
-## 实验准备
+## Prerequisites
 
-你需要：
-- **机器1（目标机器）**：当前这台机器，运行 Gazebo 和机器人
-- **机器2（攻击机器）**：另一台机器，运行攻击脚本
-- 两台机器在同一网络，或可以互相访问
+You need:
+- **Machine 1 (Target Machine)**: Current machine, running Gazebo and robot
+- **Machine 2 (Attacker Machine)**: Another machine, running attack scripts
+- Both machines on the same network, or can access each other
 
 ---
 
-## 步骤 1：在目标机器上设置（当前机器）
+## Step 1: Setup on Target Machine (Current Machine)
 
-### 1.1 打开终端，进入实验目录
+### 1.1 Open terminal and navigate to experiment directory
 
 ```bash
 cd /home/stevenchen/master-test/attack_experiments/network_attack/scripts
 ```
 
-### 1.2 运行目标机器设置脚本
+### 1.2 Run target machine setup script
 
 ```bash
 ./setup_target_machine.sh
 ```
 
-### 1.3 按提示操作
+### 1.3 Follow the prompts
 
-脚本会：
-1. 自动获取你的机器 IP 地址
-2. 询问 ROS_DOMAIN_ID（直接按 Enter 使用默认值 0）
-3. 保存配置信息
-4. **自动启动 Gazebo**
+The script will:
+1. Automatically get your machine's IP address
+2. Ask for ROS_DOMAIN_ID (press Enter to use default value 0)
+3. Save configuration information
+4. **Automatically start Gazebo**
 
-### 1.4 记录重要信息
+### 1.4 Record important information
 
-脚本会显示：
+The script will display:
 ```
 Target machine information:
-  IP Address: 192.168.x.x    ← 记下这个 IP！
-  ROS_DOMAIN_ID: 0           ← 记下这个！
+  IP Address: 192.168.x.x    ← Note this IP!
+  ROS_DOMAIN_ID: 0           ← Note this!
 ```
 
-**重要**：把这个 IP 地址和 Domain ID 告诉攻击机器！
+**Important**: Share this IP address and Domain ID with the attacker machine!
 
-### 1.5 保持 Gazebo 运行
+### 1.5 Keep Gazebo running
 
-- Gazebo 会自动启动
-- 看到机器人在空平面上
-- **不要关闭这个终端**，保持 Gazebo 运行
+- Gazebo will start automatically
+- You'll see the robot on an empty plane
+- **Do not close this terminal**, keep Gazebo running
 
 ---
 
-## 步骤 2：在攻击机器上设置（另一台机器）
+## Step 2: Setup on Attacker Machine (Another Machine)
 
-### 2.1 在另一台机器上，复制实验文件
+### 2.1 On another machine, copy experiment files
 
-你需要把 `network_attack` 文件夹复制到攻击机器，或者直接在攻击机器上：
+You need to copy the `network_attack` folder to the attacker machine, or directly on the attacker machine:
 
 ```bash
-# 在攻击机器上，进入项目目录
+# On attacker machine, navigate to project directory
 cd /path/to/master-test/attack_experiments/network_attack/scripts
 ```
 
-### 2.2 运行攻击机器设置脚本
+### 2.2 Run attacker machine setup script
 
 ```bash
 ./setup_attacker_machine.sh
 ```
 
-### 2.3 输入目标机器信息
+### 2.3 Enter target machine information
 
-脚本会询问：
-1. **Target machine IP address**: 输入步骤 1.4 中记录的 IP 地址
-2. **Target machine ROS_DOMAIN_ID**: 输入步骤 1.4 中记录的 Domain ID（通常是 0）
+The script will ask:
+1. **Target machine IP address**: Enter the IP address recorded in step 1.4
+2. **Target machine ROS_DOMAIN_ID**: Enter the Domain ID recorded in step 1.4 (usually 0)
 
-### 2.4 等待配置完成
+### 2.4 Wait for configuration to complete
 
-脚本会：
-- 测试网络连接（ping 目标机器）
-- 检查是否同一子网
-- 如果需要，创建 DDS 路由配置
-- 重启 ROS2 daemon
-- 测试节点发现
+The script will:
+- Test network connection (ping target machine)
+- Check if on the same subnet
+- Create DDS routing configuration if needed
+- Restart ROS2 daemon
+- Test node discovery
 
-### 2.5 验证连接
+### 2.5 Verify connection
 
-如果看到：
+If you see:
 ```
 /cmd_vel topic discovered - ready to attack!
 ```
 
-说明连接成功！可以继续。
+Connection successful! You can continue.
 
-如果看到：
+If you see:
 ```
 /cmd_vel topic not found
 ```
 
-检查：
-- 目标机器的 Gazebo 是否在运行
-- IP 地址是否正确
-- 网络是否连通
+Check:
+- Is Gazebo running on the target machine?
+- Is the IP address correct?
+- Is the network connected?
 
 ---
 
-## 步骤 3：发起攻击
+## Step 3: Launch Attack
 
-### 3.1 在攻击机器上，运行攻击脚本
+### 3.1 On attacker machine, choose attack method
+
+**Method A: Interactive Attack (Recommended)**
+
+```bash
+cd /path/to/master-test/attack_experiments/network_attack/scripts
+./launch_attack_interactive.sh
+```
+
+The script will display a menu to select attack type:
+```
+Select attack type:
+  1) Turn Left - Forces robot to turn left
+  2) Override - Forces robot to move forward
+  3) Spin - Makes robot spin rapidly
+  4) Stealth - Lower frequency attack
+  5) Interference - Random commands
+  6) Custom - Set all parameters manually
+```
+
+**Method B: Quick Attack (Command-line arguments)**
+
+```bash
+cd /path/to/master-test/attack_experiments/network_attack/scripts
+./quick_attack.sh turn_left 50 15
+# Parameters: attack_type frequency duration
+# Or use defaults: ./quick_attack.sh
+```
+
+**Method C: Original Script**
 
 ```bash
 cd /path/to/master-test/attack_experiments/network_attack/scripts
 ./launch_attack.sh
 ```
 
-### 3.2 选择攻击类型
+### 3.2 Observe attack effects
 
-脚本会显示菜单：
-```
-Select attack type:
-  1) Turn left (default)
-  2) Override (forward)
-  3) Spin
-  4) Stealth
-  5) Custom
-```
-
-输入数字选择（推荐选 1，左转攻击）
-
-### 3.3 观察攻击效果
-
-- 在**目标机器**的 Gazebo 窗口中观察
-- 机器人应该开始左转（如果选择了 turn_left）
-- 攻击会持续 15 秒（默认）
+- Observe in the **target machine's** Gazebo window
+- Robot should start turning left (if turn_left was selected)
+- Attack will last for the specified duration (default 15 seconds)
 
 ---
 
-## 快速命令总结
+## Quick Command Summary
 
-### 目标机器（当前机器）
+### Target Machine (Current Machine)
 
 ```bash
-# 终端 1：设置并启动
+# Terminal 1: Setup and start
 cd /home/stevenchen/master-test/attack_experiments/network_attack/scripts
 ./setup_target_machine.sh
-# 记录显示的 IP 和 Domain ID
-# Gazebo 会自动启动，保持运行
+# Record the displayed IP and Domain ID
+# Gazebo will start automatically, keep it running
 ```
 
-### 攻击机器（另一台机器）
+### Attacker Machine (Another Machine)
 
 ```bash
-# 终端 1：设置攻击机器
+# Terminal 1: Setup attacker machine
 cd /path/to/attack_experiments/network_attack/scripts
 ./setup_attacker_machine.sh
-# 输入目标机器的 IP 和 Domain ID
+# Enter target machine's IP and Domain ID
 
-# 终端 2：发起攻击
+# Terminal 2: Launch attack
 cd /path/to/attack_experiments/network_attack/scripts
 ./launch_attack.sh
-# 选择攻击类型
+# Select attack type
 ```
 
 ---
 
-## 手动攻击（可选）
+## Manual Attack (Optional)
 
-如果你想手动控制攻击参数：
+If you want to manually control attack parameters:
 
 ```bash
-# 在攻击机器上
+# On attacker machine
 cd /path/to/attack_experiments/network_attack/scripts
 
-# 确保环境变量已设置（setup_attacker_machine.sh 已设置）
-export ROS_DOMAIN_ID=0  # 与目标机器相同
+# Ensure environment variables are set (setup_attacker_machine.sh sets them)
+export ROS_DOMAIN_ID=0  # Same as target machine
 
-# 运行攻击
+# Run attack
 python3 ../../scripts/injection_attack.py \
     --attack-type turn_left \
     --frequency 50 \
@@ -183,92 +198,91 @@ python3 ../../scripts/injection_attack.py \
 
 ---
 
-## 验证连接的命令
+## Commands to Verify Connection
 
-### 在攻击机器上验证
+### Verify on attacker machine
 
 ```bash
-# 检查是否能发现目标节点
+# Check if target nodes can be discovered
 ros2 node list
 
-# 检查是否能发现 /cmd_vel 话题
+# Check if /cmd_vel topic can be discovered
 ros2 topic list | grep cmd_vel
 
-# 实时查看 /cmd_vel 消息
+# View /cmd_vel messages in real-time
 ros2 topic echo /cmd_vel
 
-# 检查消息频率
+# Check message frequency
 ros2 topic hz /cmd_vel
 ```
 
 ---
 
-## 常见问题
+## Common Issues
 
-### Q: 攻击机器找不到目标机器
+### Q: Attacker machine cannot find target machine
 
-**检查清单**：
-1. ✅ 目标机器的 Gazebo 是否在运行？
-2. ✅ IP 地址是否正确？
-3. ✅ ROS_DOMAIN_ID 是否相同？
-4. ✅ 网络是否连通？试试 `ping <target_ip>`
-5. ✅ 防火墙是否阻止了 DDS 端口？
+**Checklist**:
+1. ✅ Is Gazebo running on the target machine?
+2. ✅ Is the IP address correct?
+3. ✅ Is ROS_DOMAIN_ID the same?
+4. ✅ Is the network connected? Try `ping <target_ip>`
+5. ✅ Is firewall blocking DDS ports?
 
-**解决方法**：
+**Solution**:
 ```bash
-# 在攻击机器上重启 ROS2 daemon
+# On attacker machine, restart ROS2 daemon
 ros2 daemon stop
 ros2 daemon start
 sleep 5
 ros2 topic list
 ```
 
-### Q: 攻击没有效果
+### Q: Attack has no effect
 
-**检查清单**：
-1. ✅ `/cmd_vel` 话题是否存在？
-2. ✅ 攻击脚本是否在运行？
-3. ✅ 攻击频率是否足够高（建议 50 Hz）？
+**Checklist**:
+1. ✅ Does `/cmd_vel` topic exist?
+2. ✅ Is the attack script running?
+3. ✅ Is attack frequency high enough (recommend 50 Hz)?
 
-**解决方法**：
+**Solution**:
 ```bash
-# 在攻击机器上检查
-ros2 topic echo /cmd_vel  # 应该看到消息在发送
+# Check on attacker machine
+ros2 topic echo /cmd_vel  # Should see messages being sent
 
-# 在目标机器上检查
-ros2 topic echo /cmd_vel  # 应该看到相同的消息
+# Check on target machine
+ros2 topic echo /cmd_vel  # Should see the same messages
 ```
 
-### Q: 两台机器不在同一子网
+### Q: Two machines not on the same subnet
 
-脚本会自动检测并创建 DDS 路由配置。确保：
-- `dds_attack_config.xml` 文件已创建
-- `CYCLONEDDS_URI` 环境变量已设置
-- 重启了 ROS2 daemon
+The script will automatically detect and create DDS routing configuration. Ensure:
+- `dds_attack_config.xml` file is created
+- `CYCLONEDDS_URI` environment variable is set
+- ROS2 daemon is restarted
 
 ---
 
-## 实验完成后的清理
+## Cleanup After Experiment
 
-### 停止 Gazebo（目标机器）
+### Stop Gazebo (Target Machine)
 
-在运行 Gazebo 的终端按 `Ctrl+C`
+Press `Ctrl+C` in the terminal running Gazebo
 
-### 清理配置（可选）
+### Clean up configuration (Optional)
 
 ```bash
-# 删除保存的配置
+# Delete saved configuration
 rm target_ip.txt target_domain_id.txt
-rm dds_attack_config.xml  # 如果存在
+rm dds_attack_config.xml  # If exists
 ```
 
 ---
 
-## 下一步
+## Next Steps
 
-实验成功后，你可以：
-1. 尝试不同的攻击类型
-2. 测试不同的攻击频率
-3. 尝试跨子网攻击
-4. 测试防御措施（改变 ROS_DOMAIN_ID）
-
+After successful experiment, you can:
+1. Try different attack types
+2. Test different attack frequencies
+3. Try cross-subnet attacks
+4. Test defense measures (change ROS_DOMAIN_ID)

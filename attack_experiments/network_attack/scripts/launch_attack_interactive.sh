@@ -1,9 +1,9 @@
 #!/bin/bash
-# Launch network attack from attacker machine
-# Make sure you've run setup_attacker_machine.sh first
+# Interactive attack launcher - choose attack type and parameters
+# Works with both secure and non-secure ROS2 systems
 
 echo "=========================================="
-echo "Network Attack Launcher"
+echo "Interactive Attack Launcher"
 echo "=========================================="
 echo ""
 
@@ -13,10 +13,11 @@ if [ -z "$ROS_DISTRO" ]; then
 fi
 export TURTLEBOT3_MODEL=burger
 
-# Load saved configuration
+# Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NETWORK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Load saved configuration if exists
 if [ -f "$NETWORK_DIR/target_ip.txt" ]; then
     target_ip=$(cat "$NETWORK_DIR/target_ip.txt")
     domain_id=$(cat "$NETWORK_DIR/target_domain_id.txt" 2>/dev/null || echo "0")
@@ -28,20 +29,26 @@ if [ -f "$NETWORK_DIR/target_ip.txt" ]; then
     fi
     
     echo "Target: $target_ip (Domain ID: $domain_id)"
-else
-    echo "Error: Configuration not found!"
-    echo "Please run setup_attacker_machine.sh first"
-    exit 1
+    echo ""
 fi
-echo ""
 
-# Check if target is reachable
+# Check if using SROS2 security
+USE_SECURITY=false
+if [ -n "$ROS_SECURITY_KEYSTORE" ] && [ -n "$ROS_SECURITY_ENABLE" ]; then
+    USE_SECURITY=true
+    echo "⚠️  SROS2 Security Mode Detected"
+    echo "   Keystore: $ROS_SECURITY_KEYSTORE"
+    echo "   Note: Attack will only work if you have valid credentials"
+    echo ""
+fi
+
+# Verify connection
 echo "Verifying connection to target..."
 if ros2 topic list 2>/dev/null | grep -q cmd_vel; then
-    echo "Target is reachable - /cmd_vel topic found"
+    echo "✅ Target reachable - /cmd_vel topic found"
 else
-    echo "Warning: /cmd_vel topic not found"
-    echo "Make sure target machine is running Gazebo"
+    echo "⚠️  Warning: /cmd_vel topic not found"
+    echo "   Target may not be running, or security is blocking access"
     read -p "Continue anyway? [y/N]: " continue_anyway
     if [ "$continue_anyway" != "y" ]; then
         exit 1
@@ -49,7 +56,7 @@ else
 fi
 echo ""
 
-# Attack options
+# Attack type selection
 echo "Select attack type:"
 echo "  1) Turn Left (default) - Forces robot to turn left"
 echo "  2) Override - Forces robot to move forward"
@@ -125,10 +132,18 @@ case $attack_choice in
 esac
 
 echo ""
-echo "Attack Configuration:"
-echo "  Type: $ATTACK_DESC"
-echo "  Frequency: $ATTACK_FREQ Hz"
-echo "  Duration: $ATTACK_DURATION seconds"
+echo "=========================================="
+echo "Attack Configuration"
+echo "=========================================="
+echo "Type: $ATTACK_DESC"
+echo "Attack: $ATTACK_TYPE"
+echo "Frequency: $ATTACK_FREQ Hz"
+echo "Duration: $ATTACK_DURATION seconds"
+if [ "$USE_SECURITY" = "true" ]; then
+    echo "Security: Enabled (SROS2)"
+else
+    echo "Security: Disabled"
+fi
 echo ""
 
 read -p "Confirm and launch attack? [Y/n]: " confirm
@@ -141,8 +156,6 @@ echo ""
 echo "=========================================="
 echo "Launching Attack!"
 echo "=========================================="
-echo "Starting in 2 seconds..."
-sleep 2
 echo ""
 
 # Get path to injection_attack.py
@@ -154,6 +167,10 @@ if [ ! -f "$INJECTION_SCRIPT" ]; then
 fi
 
 # Launch attack
+echo "Starting attack in 2 seconds..."
+sleep 2
+echo ""
+
 python3 "$INJECTION_SCRIPT" \
     --attack-type "$ATTACK_TYPE" \
     --frequency "$ATTACK_FREQ" \
@@ -161,8 +178,26 @@ python3 "$INJECTION_SCRIPT" \
     --node-name "network_attacker" \
     $EXTRA_ARGS
 
+ATTACK_EXIT_CODE=$?
+
 echo ""
 echo "=========================================="
-echo "Attack completed!"
+if [ $ATTACK_EXIT_CODE -eq 0 ]; then
+    echo "Attack Completed!"
+else
+    echo "Attack Failed (exit code: $ATTACK_EXIT_CODE)"
+    echo ""
+    if [ "$USE_SECURITY" = "true" ]; then
+        echo "Possible reasons:"
+        echo "  - No valid security credentials"
+        echo "  - Security policy blocks this node"
+        echo "  - Target not reachable with current credentials"
+    else
+        echo "Possible reasons:"
+        echo "  - Target not running"
+        echo "  - Network connection issue"
+        echo "  - ROS_DOMAIN_ID mismatch"
+    fi
+fi
 echo "=========================================="
 
