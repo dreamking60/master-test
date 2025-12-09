@@ -1,0 +1,16 @@
+1765306298.0399957 [INFO] [launch]: All log files can be found below /home/stevenchen/master-test/logs/2025-12-09-12-51-38-039151-SC-master-test-1-28257
+1765306298.0400956 [INFO] [launch]: Default logging verbosity is set to INFO
+1765306298.4010606 [INFO] [gazebo-1]: process started with pid [28260]
+1765306298.4011919 [INFO] [gazebo-2]: process started with pid [28261]
+1765306298.4012303 [INFO] [create-3]: process started with pid [28264]
+1765306298.4012623 [INFO] [parameter_bridge-4]: process started with pid [28265]
+1765306298.4012866 [INFO] [robot_state_publisher-5]: process started with pid [28266]
+1765306299.6115632 [ERROR] [robot_state_publisher-5]: process has died [pid 28266, exit code -6, cmd '/opt/ros/jazzy/lib/robot_state_publisher/robot_state_publisher --ros-args -r __node:=robot_state_publisher --params-file /tmp/launch_params_h8kbjubk'].
+1765306300.6944122 [ERROR] [create-3]: process has died [pid 28264, exit code -6, cmd '/opt/ros/jazzy/lib/ros_gz_sim/create -name burger -file /opt/ros/jazzy/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf -x 0.0 -y 0.0 -z 0.01 --ros-args'].
+1765306301.7469099 [ERROR] [parameter_bridge-4]: process has died [pid 28265, exit code -6, cmd '/opt/ros/jazzy/lib/ros_gz_bridge/parameter_bridge --ros-args -p config_file:=/opt/ros/jazzy/share/turtlebot3_gazebo/params/turtlebot3_burger_bridge.yaml --ros-args'].
+1765306323.7685037 [INFO] [gazebo-2]: process has finished cleanly [pid 28261]
+1765306323.8014255 [INFO] [launch]: process[gazebo-2] was required: shutting down launched system
+1765306323.8105466 [INFO] [gazebo-1]: sending signal 'SIGINT' to process[gazebo-1]
+1765306325.5993810 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1765306325.6743033 [ERROR] [gazebo-1]: process has died [pid 28260, exit code -2, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -r -s -v2 /opt/ros/jazzy/share/turtlebot3_gazebo/worlds/empty_world.world --force-version 8'].
+1765306325.6746175 [INFO] [launch]: process[gazebo-1] was required: shutting down launched system

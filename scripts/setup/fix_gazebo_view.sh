@@ -1,0 +1,26 @@
+#!/bin/bash
+# Fix Gazebo view - reset camera to see robot on ground
+
+echo "Gazebo View Fix"
+echo "==============="
+echo ""
+echo "If you see something floating in the sky and can't see the robot:"
+echo ""
+echo "1. In Gazebo window, press 'Ctrl' key"
+echo "2. Click and drag to move the camera"
+echo "3. Scroll to zoom in/out"
+echo ""
+echo "Or use these keyboard shortcuts:"
+echo "  - Right-click + drag: Rotate view"
+echo "  - Middle-click + drag: Pan view"
+echo "  - Scroll wheel: Zoom in/out"
+echo ""
+echo "To reset view to robot:"
+echo "  1. Click on the robot in the model list (left panel)"
+echo "  2. Press 'F' key to focus on selected model"
+echo ""
+echo "Alternative: Check if robot spawned correctly"
+echo "  ros2 topic list | grep cmd_vel"
+echo "  ros2 node list"
+echo ""
+

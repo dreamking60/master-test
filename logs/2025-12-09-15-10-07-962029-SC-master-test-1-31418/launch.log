@@ -1,0 +1,8 @@
+1765314607.9638832 [INFO] [launch]: All log files can be found below /home/stevenchen/master-test/logs/2025-12-09-15-10-07-962029-SC-master-test-1-31418
+1765314607.9640286 [INFO] [launch]: Default logging verbosity is set to INFO
+1765314608.4000130 [INFO] [gazebo-1]: process started with pid [31422]
+1765314608.4001830 [INFO] [gazebo-2]: process started with pid [31423]
+1765314608.4002213 [INFO] [create-3]: process started with pid [31425]
+1765314608.4002542 [INFO] [parameter_bridge-4]: process started with pid [31427]
+1765314608.4002776 [INFO] [robot_state_publisher-5]: process started with pid [31428]
+1765314608.9587703 [INFO] [create-3]: process has finished cleanly [pid 31425]
