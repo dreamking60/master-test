@@ -1,0 +1,6 @@
+# Ignore all CSV files (uncomment if you don't want to commit data)
+# *.csv
+
+# Keep directory structure
+!.gitkeep
+

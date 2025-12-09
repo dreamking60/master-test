@@ -1,0 +1,105 @@
+======================================================================
+INJECTION ATTACK EXPERIMENT - SUMMARY REPORT
+======================================================================
+Experiment Date: 2025-12-08 18:57:34
+Experiment ID: trajectory_20251208_185734
+
+======================================================================
+EXPERIMENT CONFIGURATION
+======================================================================
+Normal Controller:
+  - Pattern: Continuous forward
+  - Frequency: 10 Hz
+  - Duration: 60 seconds
+  - Expected Behavior: Robot moves straight forward
+
+Attack:
+  - Type: Turn left
+  - Frequency: 50 Hz (5x normal frequency)
+  - Start Delay: 5 seconds
+  - Duration: 15 seconds
+  - Angular Speed: 0.5 rad/s
+
+======================================================================
+EXPERIMENT RESULTS
+======================================================================
+
+BEFORE ATTACK (0-5 seconds):
+  - Duration: 5.00 seconds
+  - Start Position: (0.000, 0.000)
+  - End Position: (0.559, 0.000)
+  - Distance Traveled: 0.559 m
+  - Average Linear Velocity: 0.169 m/s
+  - Average Angular Velocity: 0.000 rad/s
+  - Yaw Change: 0.0° (straight line)
+  - ✅ Normal operation: Robot moving straight forward
+
+DURING ATTACK (5-20 seconds):
+  - Duration: 15.00 seconds
+  - Start Position: (0.607, 0.000)
+  - End Position: (0.717, 0.004)
+  - Distance Traveled: 0.122 m
+  - Average Linear Velocity: 0.013 m/s (decreased)
+  - Average Angular Velocity: 0.422 rad/s (increased!)
+  - Yaw Change: -130.3° (significant left turn!)
+  - ✅ Attack successful: Robot turned left significantly
+
+AFTER ATTACK (20-65 seconds):
+  - Duration: 44.98 seconds
+  - Distance Traveled: 6.766 m
+  - Average Linear Velocity: 0.173 m/s
+  - Average Angular Velocity: 0.014 rad/s
+  - ✅ Robot returned to forward movement
+
+======================================================================
+ATTACK SUCCESS ANALYSIS
+======================================================================
+
+Key Metrics:
+  - Angular Velocity Change: +0.422 rad/s (from 0.000 to 0.422)
+  - Yaw Change: -130.3° during attack (vs 0.0° before)
+  - Lateral Movement: Increased during attack
+
+Success Criteria Assessment:
+  ✅ Angular velocity increased significantly (0.422 rad/s)
+  ✅ Yaw change increased dramatically (130.3° turn)
+  ✅ Robot behavior changed from straight to turning
+
+VERDICT: 🎯 ATTACK SUCCESSFUL
+
+The injection attack successfully overrode the normal controller.
+The robot changed from moving straight forward to turning left,
+demonstrating that higher frequency publishing can dominate the
+/cmd_vel topic in ROS2.
+
+======================================================================
+DATA FILES
+======================================================================
+Trajectory Data: data/trajectory_20251208_185734.csv
+  - Total data points: 2602
+  - File size: 368 KB
+  - Contains: timestamp, position (x,y,z), orientation, velocities
+
+Trajectory Plot: data/trajectory_20251208_185734_plot.png
+  - Visual representation of robot path
+  - Shows trajectory before, during, and after attack
+
+======================================================================
+CONCLUSION
+======================================================================
+
+This experiment successfully demonstrates:
+1. Application layer injection attack on ROS2 /cmd_vel topic
+2. Frequency-based override (50 Hz vs 10 Hz)
+3. Successful hijacking of robot control
+4. Clear behavioral change (straight → turn left)
+
+The attack succeeded because:
+- Higher publish frequency (50 Hz) filled message queue faster
+- More recent messages from attacker dominated topic
+- No authentication or access control in default ROS2
+
+This highlights the security vulnerability of unsecured ROS2 topics.
+
+======================================================================
+

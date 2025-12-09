@@ -1,0 +1,15 @@
+1765237666.7677989 [INFO] [launch]: All log files can be found below /home/stevenchen/master-test/logs/2025-12-08-17-47-46-766715-SC-master-test-1-11963
+1765237666.7679861 [INFO] [launch]: Default logging verbosity is set to INFO
+1765237667.1320131 [INFO] [gazebo-1]: process started with pid [11966]
+1765237667.1321735 [INFO] [gazebo-2]: process started with pid [11967]
+1765237667.1322343 [INFO] [create-3]: process started with pid [11968]
+1765237667.1322815 [INFO] [parameter_bridge-4]: process started with pid [11971]
+1765237667.1323190 [INFO] [robot_state_publisher-5]: process started with pid [11972]
+1765237667.9293892 [INFO] [create-3]: process has finished cleanly [pid 11968]
+1765239130.7565641 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1765239130.9168446 [INFO] [robot_state_publisher-5]: process has finished cleanly [pid 11972]
+1765239130.9204259 [INFO] [parameter_bridge-4]: process has finished cleanly [pid 11971]
+1765239131.1199269 [ERROR] [gazebo-1]: process has died [pid 11966, exit code -2, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -r -s -v2 /opt/ros/jazzy/share/turtlebot3_gazebo/worlds/empty_world.world --force-version 8'].
+1765239131.1203415 [INFO] [launch]: process[gazebo-1] was required: shutting down launched system
+1765239131.4082017 [ERROR] [gazebo-2]: process has died [pid 11967, exit code -2, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -g -v2  --force-version 8'].
+1765239131.4085283 [INFO] [launch]: process[gazebo-2] was required: shutting down launched system
