@@ -22,41 +22,124 @@ unset ROS_SECURITY_ENABLE
 unset ROS_SECURITY_STRATEGY
 echo "✅ Running without SROS2 (unencrypted)"
 
-echo "Step 1: Checking Gazebo..."
-if ! pgrep -f "gz sim" > /dev/null && ! pgrep -f "gazebo" > /dev/null; then
-    echo "❌ Gazebo is not running!"
+# Load MITM configuration
+MITM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONFIG_DIR="$MITM_DIR/config"
+ROBOT_IP=""
+ROUTER_IP=""
+
+if [ -f "$CONFIG_DIR/robot_config.txt" ]; then
+    source "$CONFIG_DIR/robot_config.txt"
+    echo "Found robot configuration: $ROBOT_IP"
+fi
+
+if [ -f "$CONFIG_DIR/mitm_router_config.txt" ]; then
+    source "$CONFIG_DIR/mitm_router_config.txt"
+    echo "Found router configuration: $ROUTER_IP"
+fi
+
+# Configure ROS_DOMAIN_ID (default to 0)
+if [ -z "$ROS_DOMAIN_ID" ]; then
+    export ROS_DOMAIN_ID=0
+    echo "Using ROS_DOMAIN_ID=0 (default)"
+fi
+
+# Configure DDS for cross-machine discovery (if robot IP is known)
+if [ -n "$ROBOT_IP" ] && [ -n "$ROUTER_IP" ]; then
     echo ""
-    echo "Please start Gazebo first:"
-    echo "  cd $PROJECT_ROOT"
-    echo "  ./scripts/setup/restart_gazebo.sh"
-    echo ""
-    read -p "Start Gazebo now? [y/N]: " start_gazebo
-    if [ "$start_gazebo" = "y" ]; then
-        cd "$PROJECT_ROOT"
-        ./scripts/setup/restart_gazebo.sh &
-        echo "Waiting for Gazebo to start..."
-        sleep 10
-    else
-        exit 1
-    fi
+    echo "Step 1: Configuring DDS for cross-machine discovery..."
+    
+    # Create DDS config for peer discovery
+    DDS_CONFIG_FILE="$CONFIG_DIR/dds_controller_config.xml"
+    mkdir -p "$CONFIG_DIR"
+    
+    cat > "$DDS_CONFIG_FILE" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<CycloneDDS>
+  <Domain>
+    <Id>$ROS_DOMAIN_ID</Id>
+    <General>
+      <NetworkInterfaceAddress>auto</NetworkInterfaceAddress>
+      <AllowMulticast>true</AllowMulticast>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <Peers>
+        <Peer Address="$ROBOT_IP"/>
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>
+EOF
+    
+    export CYCLONEDDS_URI="file://$DDS_CONFIG_FILE"
+    echo "✅ DDS configuration created: $DDS_CONFIG_FILE"
+    echo "   Configured to discover robot at: $ROBOT_IP"
+    
+    # Restart ROS2 daemon to apply DDS config
+    echo "Restarting ROS2 daemon..."
+    ros2 daemon stop 2>/dev/null
+    sleep 1
+    ros2 daemon start
+    sleep 2
+    echo "✅ ROS2 daemon restarted"
 else
-    echo "✅ Gazebo is running"
+    echo ""
+    echo "⚠️  Robot IP not found in configuration"
+    echo "   Will try default DDS discovery (multicast)"
+    echo "   If discovery fails, ensure ROS_DOMAIN_ID matches on both machines"
 fi
 
 echo ""
-echo "Step 2: Checking /cmd_vel topic..."
-sleep 2
-if ros2 topic list 2>/dev/null | grep -q cmd_vel; then
-    echo "✅ /cmd_vel topic exists"
-else
-    echo "⚠️  /cmd_vel topic not found"
-    echo "   Waiting a bit more for Gazebo to fully start..."
-    sleep 5
+echo "Step 2: Checking ROS2 topic discovery..."
+echo "Waiting for DDS to discover remote nodes (this may take 10-15 seconds)..."
+echo ""
+
+# Wait and check for topics multiple times
+MAX_RETRIES=6
+RETRY_COUNT=0
+TOPIC_FOUND=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    sleep 3
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    
     if ros2 topic list 2>/dev/null | grep -q cmd_vel; then
-        echo "✅ /cmd_vel topic found"
+        echo "✅ /cmd_vel topic discovered!"
+        TOPIC_FOUND=1
+        break
     else
-        echo "❌ /cmd_vel topic still not found"
-        echo "   Please check Gazebo is running correctly"
+        echo "   Attempt $RETRY_COUNT/$MAX_RETRIES: Waiting for /cmd_vel topic..."
+        # Show discovered topics for debugging
+        DISCOVERED_TOPICS=$(ros2 topic list 2>/dev/null)
+        if [ -n "$DISCOVERED_TOPICS" ]; then
+            echo "   Discovered topics: $(echo "$DISCOVERED_TOPICS" | tr '\n' ' ')"
+        fi
+    fi
+done
+
+if [ $TOPIC_FOUND -eq 0 ]; then
+    echo ""
+    echo "❌ /cmd_vel topic not found after $MAX_RETRIES attempts"
+    echo ""
+    echo "Troubleshooting steps:"
+    echo "  1. Verify Gazebo is running on robot machine"
+    echo "  2. Check ROS_DOMAIN_ID matches on both machines (current: $ROS_DOMAIN_ID)"
+    if [ -n "$ROBOT_IP" ]; then
+        echo "  3. Test network connectivity: ping $ROBOT_IP"
+        echo "  4. Check if robot machine can be reached: ros2 node list"
+    fi
+    echo "  5. Verify MITM router is forwarding traffic correctly"
+    echo "  6. Check firewall on DDS ports (7400-7500)"
+    echo ""
+    echo "Current ROS2 environment:"
+    echo "  ROS_DOMAIN_ID: $ROS_DOMAIN_ID"
+    if [ -n "$CYCLONEDDS_URI" ]; then
+        echo "  CYCLONEDDS_URI: $CYCLONEDDS_URI"
+    fi
+    echo ""
+    read -p "Continue anyway? [y/N]: " continue_anyway
+    if [ "$continue_anyway" != "y" ]; then
         exit 1
     fi
 fi
