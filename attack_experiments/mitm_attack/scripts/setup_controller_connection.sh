@@ -10,20 +10,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MITM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_DIR="$MITM_DIR/config"
 
-# Check if router config exists
-if [ ! -f "$CONFIG_DIR/mitm_router_config.txt" ]; then
-    echo "❌ MITM router not configured yet"
-    echo "   Please run setup_mitm_router.sh on attacker machine first"
-    exit 1
+# Try to load router config if exists
+ROUTER_IP=""
+if [ -f "$CONFIG_DIR/mitm_router_config.txt" ]; then
+    source "$CONFIG_DIR/mitm_router_config.txt"
+    echo "Found router configuration"
+    echo "Router IP: $ROUTER_IP"
+    echo ""
+else
+    echo "Router configuration not found locally"
+    echo "This is normal if running on a different machine"
+    echo ""
 fi
-
-# Load router config
-source "$CONFIG_DIR/mitm_router_config.txt"
 
 echo "This script configures the controller to use MITM router as gateway."
 echo ""
-echo "Router IP: $ROUTER_IP"
-echo ""
+
+if [ -z "$ROUTER_IP" ]; then
+    read -p "Enter MITM router IP address: " ROUTER_IP
+    if [ -z "$ROUTER_IP" ]; then
+        echo "❌ Router IP is required"
+        exit 1
+    fi
+fi
 
 read -p "Enter controller machine's network interface (e.g., eth0, ens33): " CONTROLLER_IFACE
 
@@ -67,6 +76,7 @@ echo "✅ Gateway configured: $ROUTER_IP"
 echo ""
 
 # Save configuration
+mkdir -p "$CONFIG_DIR"
 cat > "$CONFIG_DIR/controller_config.txt" << EOF
 # Controller Machine Configuration
 CONTROLLER_IP=$(hostname -I | awk '{print $1}')

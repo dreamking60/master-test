@@ -1,0 +1,63 @@
+# Log files
+*.log
+logs/
+**/*.log
+
+# SROS2 Security Keys and Certificates
+**/keys/
+**/*.pem
+**/*.key
+**/*.crt
+**/*.cert
+**/*.p7s
+**/ca/
+**/private/
+**/public/
+**/enclaves/
+**/policy.xml
+**/*_config.txt
+
+# MITM Attack Keys
+attack_experiments/mitm_attack/attacker_keys/
+attack_experiments/mitm_attack/forged_ca/
+attack_experiments/mitm_attack/forged_node/
+attack_experiments/mitm_attack/config/
+attack_experiments/mitm_attack/results/
+
+# ROS2 Logs
+.ros/log/
+~/.ros/log/
+
+# Test output files
+test.log
+*.pcap
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Data and results directories (keep structure but ignore content)
+attack_experiments/data/*
+!attack_experiments/data/.gitkeep
+attack_experiments/results/*
+!attack_experiments/results/.gitkeep
+

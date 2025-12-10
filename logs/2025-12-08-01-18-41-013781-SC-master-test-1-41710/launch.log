@@ -1,8 +1,0 @@
-1765178321.0144625 [INFO] [launch]: All log files can be found below logs/2025-12-08-01-18-41-013781-SC-master-test-1-41710
-1765178321.0145473 [INFO] [launch]: Default logging verbosity is set to INFO
-1765178321.5286174 [INFO] [gazebo-1]: process started with pid [41714]
-1765178321.5292842 [INFO] [gazebo-2]: process started with pid [41715]
-1765178321.5293906 [INFO] [create-3]: process started with pid [41717]
-1765178321.5294695 [INFO] [parameter_bridge-4]: process started with pid [41719]
-1765178321.5295503 [INFO] [robot_state_publisher-5]: process started with pid [41720]
-1765178322.6059701 [INFO] [create-3]: process has finished cleanly [pid 41717]
