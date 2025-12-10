@@ -1,88 +1,142 @@
-# Man-in-the-Middle (MITM) Attack on SROS2
+# Real Man-in-the-Middle (MITM) Attack Experiment
 
 ## Overview
 
-This experiment tests whether Man-in-the-Middle (MITM) attacks can bypass SROS2 security mechanisms.
+This experiment implements a **real MITM attack** using a network router as the man-in-the-middle. The attacker machine acts as a router, and both the robot and legitimate controller connect through it, allowing the attacker to intercept, modify, and forward traffic.
 
-## Important Note
+**Attack Layer**: **Application Layer MITM** (with network layer routing support)
 
-SROS2 uses **TLS/DTLS encryption** with certificate-based authentication. In theory, MITM attacks should be **blocked** because:
-- Certificate validation detects MITM
-- Encrypted communication cannot be easily decrypted
-- CA (Certificate Authority) verification prevents unauthorized certificates
+The attack uses network layer routing to position the attacker in the middle, but message modification happens at the ROS2 application layer using a ROS2 node. This is a practical hybrid approach that effectively demonstrates MITM attacks.
 
-However, this experiment tests various MITM scenarios to verify SROS2's actual security.
+## Network Topology
 
-## MITM Attack Scenarios
+```
+[Robot Machine] <---> [MITM Router/Attacker] <---> [Controller Machine]
+                            |
+                            └──> Intercepts, modifies, forwards traffic
+```
 
-### 1. Certificate Replacement Attack
-Attempt to replace legitimate certificates with attacker's certificates.
+## Attack Scenario
 
-### 2. CA Forgery Attack
-Attempt to use a forged CA certificate to sign malicious certificates.
-
-### 3. Certificate Validation Bypass
-Test if certificate validation can be bypassed (should fail with proper SROS2).
-
-### 4. Network Interception
-Attempt to intercept and modify encrypted messages (should fail).
+1. **Setup**: Attacker machine configured as router
+2. **Connection**: Robot and controller connect through attacker
+3. **Interception**: Attacker intercepts all DDS traffic
+4. **Modification**: Attacker can modify `/cmd_vel` messages
+5. **Forwarding**: Attacker forwards (possibly modified) traffic
 
 ## Prerequisites
 
-1. **SROS2 configured** - Target system must have SROS2 enabled
-2. **Network access** - Attacker must be on the same network
-3. **Root/Admin access** - Some attacks require elevated privileges
+1. **Three machines or VMs**:
+   - Robot machine (target)
+   - Controller machine (legitimate operator)
+   - Attacker machine (MITM router)
+
+2. **Network configuration**:
+   - All machines on same network segment
+   - Attacker machine has IP forwarding enabled
+   - Attacker can route traffic between robot and controller
+
+3. **Tools**:
+   - `iptables` for packet forwarding
+   - `tcpdump` or `wireshark` for packet capture
+   - Network configuration tools
+
+## Attack Layer Classification
+
+**Current Implementation**: **Application Layer MITM** with network layer support
+
+- **Network Layer**: Router setup enables traffic routing
+- **Application Layer**: Python ROS2 node modifies messages
+- **Hybrid Approach**: Combines both layers for practical attack
+
+See `docs/ATTACK_LAYERS.md` for detailed layer analysis.
 
 ## Attack Methods
 
-### Method 1: Certificate Replacement
+### Method 1: Router-Based MITM (Current Implementation)
 
-If attacker gains access to keystore directory, they might try to replace certificates.
+Attacker machine acts as actual router:
+- Robot's default gateway → Attacker
+- Controller's default gateway → Attacker
+- All traffic flows through attacker
+- **Application layer**: ROS2 node modifies messages
 
-### Method 2: CA Compromise
+### Method 2: ARP Spoofing MITM (Network Layer)
 
-If CA private key is stolen, attacker can create valid certificates.
+Attacker uses ARP spoofing to intercept:
+- Attacker spoofs router's MAC address
+- Traffic redirected to attacker
+- Attacker forwards traffic
+- **True network layer** attack
 
-### Method 3: Network Interception
+### Method 3: Bridge Mode MITM (Network Layer)
 
-Attempt to intercept DDS packets (encrypted, should fail).
-
-## Expected Results
-
-With **properly configured SROS2**:
-- ✅ MITM attacks should **FAIL**
-- ✅ Certificate validation should **REJECT** unauthorized certificates
-- ✅ Encrypted communication should **PREVENT** message interception
-- ✅ CA verification should **BLOCK** forged certificates
+Attacker creates network bridge:
+- Transparent bridge between robot and controller
+- All traffic passes through bridge
+- Attacker can intercept/modify at packet level
+- **True network layer** attack
 
 ## Files
 
-- `scripts/test_certificate_replacement.sh` - Test certificate replacement attack
-- `scripts/test_ca_forgery.sh` - Test CA forgery attack
-- `scripts/test_network_interception.sh` - Test network interception
-- `scripts/setup_mitm_environment.sh` - Setup MITM testing environment
-- `docs/MITM_ATTACK_THEORY.md` - Detailed theory and explanation
-- `docs/SROS2_MITM_DEFENSE.md` - How SROS2 defends against MITM
+- `scripts/setup_mitm_router.sh` - Configure attacker as router
+- `scripts/setup_robot_connection.sh` - Configure robot to use MITM router
+- `scripts/setup_controller_connection.sh` - Configure controller to use MITM router
+- `scripts/intercept_and_modify.sh` - Intercept and log DDS traffic
+- `scripts/modify_ros2_messages.py` - Python script to modify ROS2 messages
+- `scripts/launch_mitm_attack.sh` - Launch complete MITM attack with message modification
+- `scripts/test_mitm_attack.sh` - Complete MITM attack test
+- `docs/MITM_ROUTER_SETUP.md` - Detailed router setup guide
+- `docs/ATTACK_FLOW.md` - Attack flow and methodology
 
 ## Quick Start
 
+### Step 1: Setup MITM Router (Attacker Machine)
+
 ```bash
 cd /home/stevenchen/master-test/attack_experiments/mitm_attack/scripts
-./setup_mitm_environment.sh
-./test_certificate_replacement.sh
+./setup_mitm_router.sh
 ```
+
+### Step 2: Configure Robot (Target Machine)
+
+```bash
+./setup_robot_connection.sh
+# Enter attacker's IP as gateway
+```
+
+### Step 3: Configure Controller (Legitimate Machine)
+
+```bash
+./setup_controller_connection.sh
+# Enter attacker's IP as gateway
+```
+
+### Step 4: Launch MITM Attack
+
+```bash
+# On attacker machine
+./intercept_and_modify.sh
+```
+
+## Expected Results
+
+With **unencrypted ROS2** (default):
+- ✅ MITM attack should **SUCCEED**
+- ✅ Attacker can intercept traffic
+- ✅ Attacker can modify messages
+- ✅ Robot receives modified commands
+
+With **SROS2 enabled**:
+- ❌ Traffic is encrypted
+- ❌ Cannot read/modify encrypted messages
+- ⚠️  But attacker can still drop/block traffic
 
 ## Security Implications
 
-If MITM attacks succeed, it means:
-- SROS2 configuration is incomplete
-- Certificates are not properly validated
-- CA private key may be compromised
-- Security policies are misconfigured
-
-If MITM attacks fail (expected), it confirms:
-- SROS2 is working correctly
-- Certificate validation is effective
-- Encryption is protecting communication
-- Security mechanisms are functioning
+This demonstrates:
+- **Default ROS2 is vulnerable** to MITM attacks
+- **SROS2 encryption** protects message content
+- **Network security** is important even with SROS2
+- **Physical network access** enables MITM attacks
 

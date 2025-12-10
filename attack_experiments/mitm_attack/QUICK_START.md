@@ -1,69 +1,118 @@
-# MITM Attack Testing - Quick Start
+# MITM Attack - Quick Start Guide
 
 ## Overview
 
-Test whether Man-in-the-Middle (MITM) attacks can bypass SROS2 security.
+Real Man-in-the-Middle attack using router-based interception.
 
-## Prerequisites
+## Network Setup
 
-1. **SROS2 configured** on target system
-2. **Target system running** with SROS2 enabled
-3. **Network access** to target system
+```
+Robot (192.168.1.10) <---> MITM Router (192.168.1.1) <---> Controller (192.168.1.20)
+```
 
-## Quick Test
+## Quick Steps
 
-### Step 1: Setup MITM Environment
+### Step 1: Setup MITM Router (Attacker Machine)
 
 ```bash
 cd /home/stevenchen/master-test/attack_experiments/mitm_attack/scripts
-./setup_mitm_environment.sh
+sudo ./setup_mitm_router.sh
 ```
 
-This creates:
-- Attacker's CA (different from target system)
-- Attacker's node certificate
-- Test configuration
+**Result**: Attacker machine configured as router with IP forwarding.
 
-### Step 2: Test Certificate Replacement
+### Step 2: Configure Robot (Target Machine)
 
 ```bash
-./test_certificate_replacement.sh
+sudo ./setup_robot_connection.sh
+# Enter network interface and router IP
 ```
 
-**Expected Result**: Should FAIL (certificate rejected)
+**Result**: Robot routes all traffic through MITM router.
 
-### Step 3: Test CA Forgery
+### Step 3: Configure Controller (Legitimate Machine)
 
 ```bash
-./test_ca_forgery.sh
+sudo ./setup_controller_connection.sh
+# Enter network interface and router IP
 ```
 
-**Expected Result**: Should FAIL (forged CA rejected)
+**Result**: Controller routes all traffic through MITM router.
 
-### Step 4: Test Network Interception (Optional)
+### Step 4: Start MITM Attack
 
+**On MITM router machine**:
+
+**Option A: Intercept and modify messages** (for unencrypted ROS2):
 ```bash
-sudo ./test_network_interception.sh
+./launch_mitm_attack.sh
+# Select modification type (reverse, stop, spin, amplify)
 ```
 
-**Expected Result**: Traffic encrypted, unreadable
+**Option B: Just intercept and log**:
+```bash
+sudo ./intercept_and_modify.sh
+```
+
+**Result**: 
+- Option A: Messages are intercepted, modified, and forwarded
+- Option B: All DDS traffic is intercepted and logged
+
+### Step 5: Test Attack
+
+**On controller machine**:
+```bash
+# Start normal controller
+python3 normal_controller.py --pattern continuous
+```
+
+**On MITM router**:
+- Observe intercepted traffic
+- Analyze captured packets
+- Test message modification (if unencrypted)
 
 ## Expected Results
 
-If SROS2 is properly configured:
-- ✅ All attacks should **FAIL**
-- ✅ Certificate validation should **REJECT** unauthorized certificates
-- ✅ CA verification should **DETECT** forgeries
-- ✅ Encrypted traffic should be **UNREADABLE**
+### Default ROS2 (Unencrypted)
 
-## What This Proves
+- ✅ Can intercept all messages
+- ✅ Can read message content
+- ✅ Can modify `/cmd_vel` commands
+- ✅ Attack succeeds
 
-- **If attacks fail**: SROS2 is working correctly ✅
-- **If attacks succeed**: SROS2 configuration may be incomplete ⚠️
+### SROS2 Enabled
 
-## Full Documentation
+- ✅ Can intercept packets (encrypted)
+- ❌ Cannot read content
+- ❌ Cannot modify (signature fails)
+- ⚠️  Can still block traffic
 
-- `docs/MITM_ATTACK_THEORY.md` - Detailed attack theory
-- `docs/SROS2_MITM_DEFENSE.md` - How SROS2 defends against MITM
-- `README.md` - Complete overview
+## Verification
+
+Check if traffic flows through router:
+
+```bash
+# On router machine
+sudo tcpdump -i <interface> 'udp portrange 7400-7500'
+```
+
+Should see DDS packets flowing through.
+
+## Cleanup
+
+To restore normal network:
+
+**On robot/controller**:
+```bash
+# Restore original gateway
+sudo ip route del default
+sudo ip route add default via <original_gateway_ip>
+```
+
+**On router**:
+```bash
+# Disable forwarding
+echo 0 > /proc/sys/net/ipv4/ip_forward
+sudo iptables -t nat -F
+```
 
