@@ -27,6 +27,10 @@ attack_experiments/
 │   ├── EXPERIMENT_RESULTS.md     # How to interpret results
 │   └── README_EMPTY_WORLD.md     # Using the empty world
 │
+├── arp_mitm/                     # Isolated ARP MITM experiment template
+│   ├── README.md                 # Three-VM checklist & logging guide
+│   └── scripts/arp_poison_template.py  # TODO-based scaffolding (fill in yourself)
+│
 ├── data/                         # CSV files with trajectory data
 │   └── trajectory_*.csv           # Robot position over time
 │
@@ -147,4 +151,3 @@ python3 record_trajectory.py --output ../data/trajectory.csv --duration 60 --plo
 cd attack_experiments/scripts
 python3 analyze_trajectory.py ../data/trajectory_YYYYMMDD_HHMMSS.csv
 ```
-

@@ -69,6 +69,10 @@ Attacker uses ARP spoofing to intercept:
 - Attacker forwards traffic
 - **True network layer** attack
 
+New template resources are available to document and run this scenario safely:
+- `../arp_mitm/README.md` – step-by-step checklist for the three-VM lab
+- `../arp_mitm/scripts/arp_mitm_template.py` – scaffolding with TODO comments where you can insert your own packet-crafting logic
+
 ### Method 3: Bridge Mode MITM (Network Layer)
 
 Attacker creates network bridge:
@@ -139,4 +143,3 @@ This demonstrates:
 - **SROS2 encryption** protects message content
 - **Network security** is important even with SROS2
 - **Physical network access** enables MITM attacks
-
