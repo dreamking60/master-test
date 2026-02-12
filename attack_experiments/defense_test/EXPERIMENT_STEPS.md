@@ -10,6 +10,7 @@ After successfully demonstrating network attacks, we now test various defense me
 2. **Firewall Rules** - Block DDS ports
 3. **Node Monitoring** - Detect unexpected publishers
 4. **Rate Limiting** - Detect high-frequency attacks
+5. **ARP Integrity Monitoring** - Detect suspicious ARP/neighbor table changes (MITM symptom)
 
 ---
 
@@ -144,6 +145,40 @@ Monitoring detects rate spike from 10 Hz to 50+ Hz.
 
 ### Conclusion
 Rate limiting can detect attacks but requires threshold tuning.
+
+---
+
+## Test 5: ARP Integrity Monitoring (MITM Symptom Detection)
+
+### Purpose
+Detect suspicious ARP/neighbor table changes that often accompany man-in-the-middle positioning attempts, especially when the **default gateway IP** suddenly resolves to a different MAC address.
+
+This is a **defensive** test: it collects evidence (baseline + logs) and alerts on IP→MAC changes.
+
+### Steps
+
+1. **On the machine you want to protect/observe** (robot, controller, or router VM), start ARP monitoring:
+
+   ```bash
+   cd defense_test/scripts
+   bash ./test_arp_monitoring.sh
+   ```
+
+2. The script will:
+   - Detect your default gateway and interface
+   - Take a baseline neighbor table snapshot
+   - Watch the gateway IP (and any extra IPs you enter) for MAC changes
+   - Write logs and a baseline JSON under `defense_test/results/`
+
+3. **While the monitor is running**, perform your networking experiments (e.g., any MITM routing/gateway changes or lab manipulations). If an IP→MAC mapping changes, you should see an `ALERT` line in the monitor output and log.
+
+### Expected Result
+- Normal network: gateway IP mapping stays stable → mostly `INFO`/`NOTICE`
+- If neighbor mapping changes: `ALERT <ip>: MAC changed <old> -> <new> (baseline was <base>)`
+
+### Notes / Interpretation
+- **Gateway MAC change** is a high-signal indicator that the host's L2 path may have been altered.
+- **MAC collisions** (multiple IPs mapping to one MAC) are a weak signal; they can happen legitimately (NAT/bridges), but are useful context.
 
 ---
 

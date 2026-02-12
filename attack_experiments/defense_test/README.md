@@ -9,6 +9,7 @@ This experiment tests the effectiveness of various defense mechanisms against RO
 3. **Node Monitoring** - Detecting unexpected publishers on critical topics
 4. **Message Rate Limiting** - Limiting message frequency to prevent high-frequency attacks
 5. **Topic Access Control** - Restricting which nodes can publish to critical topics
+6. **ARP Integrity Monitoring** - Detect suspicious ARP/neighbor table changes (MITM early warning)
 
 ## Quick Start
 
@@ -40,6 +41,15 @@ cd defense_test/scripts
 ./test_rate_limiting.sh
 ```
 
+### Test 5: ARP Integrity Monitoring (Detect MITM Symptoms)
+
+This test monitors the local ARP/neighbor table for suspicious IP→MAC changes, especially for the **default gateway**.
+
+```bash
+cd defense_test/scripts
+bash ./test_arp_monitoring.sh
+```
+
 ## Experiment Structure
 
 ```
@@ -55,6 +65,10 @@ defense_test/
 └── docs/
     └── DEFENSE_RESULTS.md          # Results documentation
 ```
+
+Added in this repo:
+- `scripts/monitor_arp.py` - ARP/neighbor table integrity monitor (defensive)
+- `scripts/test_arp_monitoring.sh` - Wrapper to run ARP monitor and save logs/baseline
 
 ## Expected Results
 
