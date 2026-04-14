@@ -65,6 +65,7 @@ python3 attack_cmd_vel_EN.py --attack forward --speed 0.5 --duration 10
 - **Environment Setup**: `docs/env.md` - Complete Ubuntu + ROS2 + TurtleBot3 environment setup guide
 - **Attack Experiments**: `attack_experiments/README_CN.md` - Chinese version attack experiment documentation
 - **Attack Experiments**: `attack_experiments/README_EN.md` - English version attack experiment documentation
+- **WSL + Docker Hybrid Setup**: `deployment/wsl_docker/README.md` - Gazebo on WSL host, controller/attacker in containers
 - **Short-term Plan**: `docs/SHORT_TERM_PLAN.md` - 1-month detailed plan (最近1个月计划)
 - **Long-term Plan**: `docs/LONG_TERM_PLAN.md` - Long-term project roadmap (长期项目路线图)
 

@@ -7,6 +7,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 export ROS_LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$PROJECT_ROOT/logs"
 
-# Launch Gazebo simulation, redirect output to test.log in project root
+# Launch Gazebo empty world (flat plane) with project custom bridge, redirect output to test.log
 cd "$PROJECT_ROOT"
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py > test.log 2>&1
+echo "Launching Gazebo empty world (flat plane) with custom bridge..."
+ros2 launch "$PROJECT_ROOT/launch/turtlebot3_empty_world_custom_bridge.launch.py" > test.log 2>&1

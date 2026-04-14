@@ -54,10 +54,10 @@ Thumbs.db
 *.tmp
 *.temp
 /tmp/
+.codex
 
 # Data and results directories (keep structure but ignore content)
 attack_experiments/data/*
 !attack_experiments/data/.gitkeep
 attack_experiments/results/*
 !attack_experiments/results/.gitkeep
-

@@ -1,0 +1,51 @@
+services:
+  controller:
+    build:
+      context: ./node_image
+    image: tb3-ros2-node:jazzy
+    container_name: tb3-controller
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
+      ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+      ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
+      ROS_SECURITY_ENCLAVE: /controller
+    volumes:
+      - ../../:/workspace/project:rw
+    working_dir: /workspace/project
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "sleep infinity"]
+
+  attacker:
+    build:
+      context: ./node_image
+    image: tb3-ros2-node:jazzy
+    container_name: tb3-attacker
+    depends_on:
+      - controller
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
+      ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+      ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
+      ROS_SECURITY_ENCLAVE: /attacker
+    volumes:
+      - ../../:/workspace/project:rw
+    working_dir: /workspace/project
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "sleep infinity"]

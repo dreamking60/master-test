@@ -21,11 +21,11 @@ class NormalController(Node):
         self.get_logger().info(f'Normal controller started: {node_name}')
     
     def _create_twist_stamped(self, linear_x=0.0, angular_z=0.0):
-        """Helper to create a velocity command message"""
+        """Helper to create a velocity command message."""
         msg = TwistStamped()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = 'base_link'  # Standard frame
+        msg.header.frame_id = 'base_link'
         msg.twist.linear.x = float(linear_x)
         msg.twist.angular.z = float(angular_z)
         return msg
@@ -169,4 +169,3 @@ Examples:
 
 if __name__ == '__main__':
     main()
-

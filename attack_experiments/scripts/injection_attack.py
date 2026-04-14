@@ -27,7 +27,7 @@ class InjectionAttacker(Node):
             self.get_logger().warn(f'ATTACK MODE: {node_name} - trying to hijack control!')
     
     def _create_twist_stamped(self, linear_x=0.0, angular_z=0.0):
-        """Create TwistStamped message"""
+        """Create TwistStamped message."""
         msg = TwistStamped()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -184,4 +184,3 @@ Examples:
 
 if __name__ == '__main__':
     main()
-

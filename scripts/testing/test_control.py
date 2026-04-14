@@ -18,7 +18,7 @@ class TurtleBotController(Node):
         self.get_logger().info('TurtleBot controller started')
 
     def _create_twist_stamped(self, linear_x=0.0, angular_z=0.0):
-        """Create TwistStamped message"""
+        """Create TwistStamped message."""
         msg = TwistStamped()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
