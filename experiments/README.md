@@ -8,7 +8,7 @@ This directory is the presentation/report-oriented experiment layout. It does no
 | --- | --- | --- | --- |
 | 01 | Open `/cmd_vel` Injection | Verified in WSL + Docker | An unsecured ROS2 graph allows any discovered publisher to inject robot motion commands. |
 | 02 | SROS2 `/cmd_vel` Defense | Migrated, runtime validation next | SROS2 should allow authorized controller traffic while blocking unauthorized command publishers. |
-| 03 | Network MITM / ARP Spoofing | Designed, not migrated to Docker bridge yet | Network-path control can support interception/modification, but host-network Docker is not suitable for ARP spoofing. |
+| 03 | Network MITM / ARP Spoofing | Docker bridge lab migrated | Network-path control can support interception/modification, but host-network Docker is not suitable for ARP spoofing. |
 | 04 | SLAM Security | Future work | Mapping/localization data integrity should be evaluated after the control-channel experiments are stable. |
 
 ## Recommended Presentation Storyline

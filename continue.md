@@ -59,7 +59,12 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 
 ### ❌ Network Layer MITM (ARP Spoofing)
 - **Issue**: Standard ARP spoofing is still impossible in `network_mode: host`.
-- **Strategy**: Plan to create a secondary `docker-compose.bridge.yml` that uses a standard Docker bridge network to give containers unique IPs/MACs for this specific experiment.
+- **Progress**: Added a separate Docker bridge lab in `deployment/wsl_docker/docker-compose.mitm.yml` with independent controller, robot, and attacker containers.
+- **Demo/Evidence**:
+    - Added `scripts/demo/tmux_network_mitm_demo.sh`.
+    - Added `experiments/03_network_mitm/run_demo.sh`.
+    - Added `experiments/03_network_mitm/collect_evidence.sh`.
+- **Next Task**: Port or reimplement the ARP/MITM logic inside the isolated bridge lab and record before/after ARP cache evidence.
 
 ---
 
@@ -74,7 +79,8 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 - [ ] Verify that the `attacker` node is blocked when it lacks the correct certificate or permission.
 
 ### Step 2: Bridge Network for MITM
-- [ ] Set up a bridge-mode environment to re-enable ARP Spoofing experiments as per the Mid-Progress Report.
+- [x] Set up a bridge-mode environment to re-enable ARP Spoofing experiments as per the Mid-Progress Report.
+- [x] Add tmux demo and evidence collection for the bridge lab topology.
 - [ ] Port the `arp_poison.py` logic to work with Docker bridge IPs.
 
 ### Step 3: SLAM Security (Long-term)

@@ -101,6 +101,12 @@ For the SROS2 defense demo:
 ./scripts/demo/tmux_sros2_defense_demo.sh
 ```
 
+For the network MITM bridge-lab demo:
+
+```bash
+./scripts/demo/tmux_network_mitm_demo.sh
+```
+
 ## 4) Launch Gazebo on host
 
 In a host shell:

@@ -84,6 +84,12 @@ Explain:
 - Docker host network is not appropriate for ARP spoofing.
 - Use Docker bridge or multi-VM topology.
 
+Demo command:
+
+```bash
+./scripts/demo/tmux_network_mitm_demo.sh
+```
+
 ### Slide 7: Future Work - SLAM Security
 
 Connect command-channel security to perception security:

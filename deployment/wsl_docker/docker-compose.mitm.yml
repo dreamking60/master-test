@@ -1,0 +1,86 @@
+services:
+  mitm-controller:
+    build:
+      context: ./node_image
+    image: tb3-ros2-node:jazzy
+    container_name: tb3-mitm-controller
+    hostname: mitm-controller
+    networks:
+      mitm_lab:
+        ipv4_address: 172.28.0.10
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
+      ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+    volumes:
+      - ../../:/workspace/project:rw
+    working_dir: /workspace/project
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "sleep infinity"]
+
+  mitm-robot:
+    build:
+      context: ./node_image
+    image: tb3-ros2-node:jazzy
+    container_name: tb3-mitm-robot
+    hostname: mitm-robot
+    networks:
+      mitm_lab:
+        ipv4_address: 172.28.0.20
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
+      ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+    volumes:
+      - ../../:/workspace/project:rw
+    working_dir: /workspace/project
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "sleep infinity"]
+
+  mitm-attacker:
+    build:
+      context: ./node_image
+    image: tb3-ros2-node:jazzy
+    container_name: tb3-mitm-attacker
+    hostname: mitm-attacker
+    depends_on:
+      - mitm-controller
+      - mitm-robot
+    networks:
+      mitm_lab:
+        ipv4_address: 172.28.0.50
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
+      ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+    volumes:
+      - ../../:/workspace/project:rw
+    working_dir: /workspace/project
+    stdin_open: true
+    tty: true
+    command: ["bash", "-lc", "sleep infinity"]
+
+networks:
+  mitm_lab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+          gateway: 172.28.0.1
