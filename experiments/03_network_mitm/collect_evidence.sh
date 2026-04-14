@@ -33,5 +33,6 @@ run_section "Robot network state" "sudo ./scripts/wsl_docker/mitm_exec.sh robot 
 run_section "Attacker network state" "sudo ./scripts/wsl_docker/mitm_exec.sh attacker 'hostname; ip -br addr; ip route; ip neigh'"
 run_section "Controller to robot ping" "sudo ./scripts/wsl_docker/mitm_exec.sh controller 'ping -c 3 172.28.0.20'"
 run_section "Attacker sees controller/robot" "sudo ./scripts/wsl_docker/mitm_exec.sh attacker 'ping -c 2 172.28.0.10; ping -c 2 172.28.0.20'"
+run_section "Recent ARP helper logs" "find '$PROJECT_ROOT/logs/experiments/03_network_mitm' -name 'arp_poison_*.jsonl' -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -3 | cut -d' ' -f2- | xargs -r -I{} sh -c 'echo --- {}; tail -n 40 {}'"
 
 echo "Evidence written to: $OUT"

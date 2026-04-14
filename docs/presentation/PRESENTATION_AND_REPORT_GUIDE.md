@@ -90,6 +90,12 @@ Demo command:
 ./scripts/demo/tmux_network_mitm_demo.sh
 ```
 
+The tmux demo does not automatically launch ARP poisoning. For the isolated bridge lab only, use:
+
+```bash
+sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20
+```
+
 ### Slide 7: Future Work - SLAM Security
 
 Connect command-channel security to perception security:

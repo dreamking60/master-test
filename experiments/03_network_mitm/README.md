@@ -89,6 +89,39 @@ sudo ./scripts/wsl_docker/mitm_exec.sh attacker "ip -br addr; ip neigh"
 sudo ./scripts/wsl_docker/mitm_down.sh
 ```
 
+## ARP Poisoning Lab Helper
+
+The migrated helper is:
+
+```text
+experiments/03_network_mitm/arp_poison_lab.py
+```
+
+It is intentionally constrained:
+
+- Defaults to dry-run mode.
+- Requires `--execute` before it sends ARP replies.
+- Defaults to the isolated Docker lab subnet `172.28.0.0/24`.
+- Supports `--restore` to send ARP restoration replies when it stops.
+
+Dry-run:
+
+```bash
+sudo ./scripts/wsl_docker/mitm_arp_poison.sh --duration 6
+```
+
+Execute only inside the isolated Docker bridge lab:
+
+```bash
+sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20
+```
+
+Before and after running the execute command, collect ARP evidence:
+
+```bash
+sudo ./experiments/03_network_mitm/collect_evidence.sh
+```
+
 ## Existing Materials
 
 Useful existing references:
@@ -120,6 +153,7 @@ Core evidence:
 - Packet capture or summarized packet counts.
 - ROS2 topic availability before and during MITM.
 - Robot trajectory or command log showing whether modification occurred.
+- `logs/experiments/03_network_mitm/arp_poison_*.jsonl` from the ARP helper.
 
 ## Presentation Points
 
@@ -134,4 +168,4 @@ The MITM experiment studies a stronger attacker who controls the communication p
 
 ## Migration Status
 
-The Docker bridge lab has been added for topology validation and presentation. The next implementation step is to port the ARP/MITM logic into this isolated bridge environment and record before/after ARP state. Active poisoning is intentionally not launched by the tmux demo.
+The Docker bridge lab, tmux topology demo, evidence collector, and constrained ARP poisoning helper have been migrated. The next implementation step is to connect this network-positioning experiment back to ROS2 command traffic measurements, for example by running a controller publisher and robot subscriber across the bridge while ARP state is changed.

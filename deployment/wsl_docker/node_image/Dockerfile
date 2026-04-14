@@ -7,6 +7,7 @@ RUN apt-get update \
         iproute2 \
         net-tools \
         tcpdump \
+        python3-scapy \
         ros-jazzy-sros2 \
         ros-jazzy-geometry-msgs \
     && rm -rf /var/lib/apt/lists/*

@@ -92,7 +92,11 @@ echo 'Safe evidence capture command:'
 echo "sudo ./experiments/03_network_mitm/collect_evidence.sh"
 echo
 echo 'ARP poisoning is intentionally not auto-started by this demo.'
-echo 'Use only inside this isolated Docker bridge lab if you implement/enable it.'
+echo 'Dry-run command:'
+echo "sudo ./scripts/wsl_docker/mitm_arp_poison.sh --duration 6"
+echo
+echo 'Execute command for this isolated Docker bridge lab only:'
+echo "sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20"
 echo
 read -r -p 'Press Enter to keep attacker pane open... ' _
 EOF

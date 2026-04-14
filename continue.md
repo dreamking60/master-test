@@ -64,7 +64,11 @@ This project focuses on analyzing and defending against cyber-physical attacks o
     - Added `scripts/demo/tmux_network_mitm_demo.sh`.
     - Added `experiments/03_network_mitm/run_demo.sh`.
     - Added `experiments/03_network_mitm/collect_evidence.sh`.
-- **Next Task**: Port or reimplement the ARP/MITM logic inside the isolated bridge lab and record before/after ARP cache evidence.
+- **ARP Helper**:
+    - Added constrained helper `experiments/03_network_mitm/arp_poison_lab.py`.
+    - Added wrapper `scripts/wsl_docker/mitm_arp_poison.sh`.
+    - Helper defaults to dry-run and requires `--execute`; defaults to the isolated `172.28.0.0/24` lab subnet.
+- **Next Task**: Connect the bridge MITM experiment to ROS2 command traffic measurements.
 
 ---
 
@@ -81,7 +85,8 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 ### Step 2: Bridge Network for MITM
 - [x] Set up a bridge-mode environment to re-enable ARP Spoofing experiments as per the Mid-Progress Report.
 - [x] Add tmux demo and evidence collection for the bridge lab topology.
-- [ ] Port the `arp_poison.py` logic to work with Docker bridge IPs.
+- [x] Port the `arp_poison.py` logic to work with Docker bridge IPs in a constrained lab helper.
+- [ ] Add ROS2 command traffic measurement while ARP state is changed.
 
 ### Step 3: SLAM Security (Long-term)
 - [ ] Integrate ORB-SLAM3 into the Docker stack as planned in the future work section of the report.
