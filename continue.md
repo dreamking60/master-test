@@ -14,6 +14,8 @@ This project focuses on analyzing and defending against cyber-physical attacks o
     - `experiments/03_network_mitm/`
     - `experiments/04_slam_security/`
 - Added `docs/presentation/PRESENTATION_AND_REPORT_GUIDE.md` with slide structure, result table, figures to prepare, and report-writing guidance.
+- Added `docs/FINAL_REPORT_DRAFT.md` as a final report draft based on the mid-progress report and migrated experiments.
+- Added `docs/presentation/PPT_BUILD_PLAN.md` as a slide-by-slide final presentation plan.
 - Added `scripts/demo/tmux_three_machine_demo.sh` to launch a three-pane demo view: WSL host Gazebo/robot, Docker controller, and Docker attacker.
 - Added `scripts/demo/tmux_sros2_defense_demo.sh` as the dedicated tmux entry point for Experiment 02.
 - Existing scripts were not moved yet to avoid breaking the working WSL + Docker pipeline; the new folders currently act as experiment guides and indexes.
@@ -92,4 +94,4 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 - [ ] Integrate ORB-SLAM3 into the Docker stack as planned in the future work section of the report.
 
 ---
-*Last Updated: 2026-04-14*
+*Last Updated: 2026-04-15*
