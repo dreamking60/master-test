@@ -50,6 +50,25 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 ### ✅ Injection Attack (Verified)
 - Re-verified that the non-secure injection attack works in the new hybrid setup with `ROS_DOMAIN_ID=0`.
 
+### ✅ Experiment Isolation / Cleanup
+- Added a shared cleanup script:
+    - `scripts/demo/cleanup_all_experiments.sh`
+- The cleanup script stops previous experiment state before a new demo:
+    - Kills tmux sessions: `tb3_security_demo`, `tb3_sros2_defense_demo`, `tb3_network_mitm_demo`
+    - Stops host-network controller/attacker containers via `scripts/wsl_docker/down.sh`
+    - Stops MITM bridge containers via `scripts/wsl_docker/mitm_down.sh`
+    - Stops leftover Gazebo / `ros2 launch` / `gz sim` / `cmd_vel_relay.py` processes
+    - Resets the ROS2 daemon
+- The main tmux demo scripts call cleanup automatically before starting:
+    - `scripts/demo/tmux_three_machine_demo.sh open`
+    - `scripts/demo/tmux_sros2_defense_demo.sh`
+    - `scripts/demo/tmux_network_mitm_demo.sh`
+- If an existing environment must be preserved, run demos with:
+```bash
+SKIP_CLEANUP=1 ./scripts/demo/tmux_three_machine_demo.sh open
+```
+- Reason: Experiment 01 and Experiment 02 share the WSL Gazebo + Docker controller/attacker path, so stale publishers, stale Gazebo processes, old Docker containers, or ROS2 daemon cache can invalidate experiment conclusions.
+
 ---
 
 ## 3. Outstanding Issues (What Needs Fixing)
