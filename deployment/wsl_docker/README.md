@@ -89,6 +89,18 @@ This opens three panes. The panes represent roles/environments, not three Docker
 
 By default the attacker pane waits for Enter, so you can first show the normal robot movement and then trigger the attack during the presentation.
 
+The demo scripts automatically run:
+
+```bash
+./scripts/demo/cleanup_all_experiments.sh
+```
+
+before starting, so old Gazebo processes, Docker containers, tmux sessions, and ROS2 daemon state do not contaminate the next experiment. If you intentionally want to keep an existing environment, run with:
+
+```bash
+SKIP_CLEANUP=1 ./scripts/demo/tmux_three_machine_demo.sh open
+```
+
 To auto-start the attacker after a delay:
 
 ```bash

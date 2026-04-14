@@ -31,6 +31,22 @@ For each experiment, collect these artifacts:
 - One short result table: baseline, attack, defense.
 - One architecture diagram showing node placement and topic flow.
 
+## Experiment Isolation
+
+Before each tmux demo, the scripts run:
+
+```bash
+./scripts/demo/cleanup_all_experiments.sh
+```
+
+This stops old tmux sessions, Gazebo/relay processes, host-network containers, MITM bridge containers, and resets the ROS2 daemon. This is important because Experiment 01 and Experiment 02 share the same WSL Gazebo + Docker controller/attacker path, and stale publishers can invalidate the result.
+
+To skip cleanup intentionally:
+
+```bash
+SKIP_CLEANUP=1 ./scripts/demo/tmux_three_machine_demo.sh open
+```
+
 ## Current Stable WSL + Docker Architecture
 
 The working migration path is:

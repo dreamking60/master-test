@@ -88,6 +88,8 @@ The final scripts are organized under:
 - `experiments/`
 - `deployment/wsl_docker/`
 
+To avoid cross-experiment interference, the demo scripts run a shared cleanup step before starting. The cleanup script stops old tmux sessions, Docker containers, Gazebo processes, relay processes, and resets the ROS2 daemon.
+
 ## 4. Experiment 1: Open ROS2 `/cmd_vel` Injection
 
 ### 4.1 Purpose
@@ -328,4 +330,3 @@ The project has several limitations:
 The project successfully migrated a ROS2 TurtleBot3 security workflow from a difficult multi-VM setup to a more maintainable WSL + Docker environment. The migrated system preserves the key security roles while keeping Gazebo visible on the host. The open ROS2 injection experiment demonstrates the risk of unauthenticated command topics. The SROS2 defense work shows how enclave-based permissions can restrict command publishers. The network MITM work establishes an isolated bridge topology for layer-2 security experiments.
 
 Overall, the project demonstrates that ROS2 robot security must be evaluated across multiple layers: application-level topic permissions, middleware authentication, network-path control, and eventually perception-data integrity.
-

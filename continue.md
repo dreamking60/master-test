@@ -18,6 +18,7 @@ This project focuses on analyzing and defending against cyber-physical attacks o
 - Added `docs/presentation/PPT_BUILD_PLAN.md` as a slide-by-slide final presentation plan.
 - Added `scripts/demo/tmux_three_machine_demo.sh` to launch a three-pane demo view: WSL host Gazebo/robot, Docker controller, and Docker attacker.
 - Added `scripts/demo/tmux_sros2_defense_demo.sh` as the dedicated tmux entry point for Experiment 02.
+- Added `scripts/demo/cleanup_all_experiments.sh`; tmux demos now run cleanup by default to avoid cross-experiment interference.
 - Existing scripts were not moved yet to avoid breaking the working WSL + Docker pipeline; the new folders currently act as experiment guides and indexes.
 
 ### ✅ Environment Migration & Infrastructure

@@ -305,6 +305,14 @@ Future work:
 
 Do not run every demo live unless you have enough time. Recommended live demo:
 
+Before every demo, the tmux scripts automatically run:
+
+```bash
+./scripts/demo/cleanup_all_experiments.sh
+```
+
+This reduces cross-experiment interference from old Docker containers, Gazebo processes, tmux sessions, and ROS2 daemon state.
+
 1. Start with open injection:
 
 ```bash
@@ -357,4 +365,3 @@ Optional backup slides:
 - Full command list.
 - Troubleshooting note about `ROS_SECURITY_ENCLAVE_OVERRIDE`.
 - Limitations and next steps.
-

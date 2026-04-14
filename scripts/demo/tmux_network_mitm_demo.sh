@@ -12,6 +12,7 @@ Usage:
 
 Environment options:
   SESSION=name   tmux session name, default: tb3_network_mitm_demo
+  SKIP_CLEANUP=1 skip automatic cleanup before starting
 
 This demo starts the isolated Docker bridge MITM lab and opens three panes:
   controller: 172.28.0.10
@@ -35,6 +36,10 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   echo "Attach with: tmux attach -t $SESSION" >&2
   echo "Or stop it with: tmux kill-session -t $SESSION" >&2
   exit 1
+fi
+
+if [[ "${SKIP_CLEANUP:-0}" != "1" ]]; then
+  "$SCRIPT_DIR/cleanup_all_experiments.sh"
 fi
 
 role_banner() {

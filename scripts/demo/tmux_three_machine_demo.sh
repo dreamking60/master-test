@@ -16,6 +16,7 @@ Usage:
 Environment options:
   SESSION=name        tmux session name, default: tb3_security_demo
   ATTACK_DELAY=secs   attacker auto-start delay. Default 0 means wait for Enter.
+  SKIP_CLEANUP=1      skip automatic cleanup before starting
 
 Examples:
   $0 open
@@ -46,6 +47,10 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   echo "Attach with: tmux attach -t $SESSION" >&2
   echo "Or stop it with: tmux kill-session -t $SESSION" >&2
   exit 1
+fi
+
+if [[ "${SKIP_CLEANUP:-0}" != "1" ]]; then
+  "$SCRIPT_DIR/cleanup_all_experiments.sh"
 fi
 
 banner_cmd() {
