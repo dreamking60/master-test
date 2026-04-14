@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+from rclpy._rclpy_pybind11 import RCLError
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
@@ -26,9 +27,21 @@ class AttackerPublisher(Node):
 
 def main():
     rclpy.init()
-    node = AttackerPublisher()
-    rclpy.spin(node)
+    try:
+        node = AttackerPublisher()
+    except RCLError as exc:
+        print('SROS2 policy blocked attacker publisher creation on /cmd_vel_in.')
+        print('This is the expected result in Experiment 02 secure mode.')
+        print(f'Original rclpy error: {exc}')
+        rclpy.shutdown()
+        return 13
+
+    try:
+        rclpy.spin(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

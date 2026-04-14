@@ -91,6 +91,13 @@ Desired final behavior:
 - Controller commands are relayed and the robot moves.
 - Attacker process may start, but its `/cmd_vel_in` publisher should not be authorized to communicate with the secure relay.
 - Robot should continue following legitimate controller behavior instead of turning under attacker control.
+- A secure-mode attacker may exit with:
+
+```text
+SROS2 policy blocked attacker publisher creation on /cmd_vel_in.
+```
+
+This means the policy blocked the unauthorized data writer before messages could be published.
 
 ## Current Debug Status
 

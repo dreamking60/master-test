@@ -102,7 +102,7 @@ SKIP_CLEANUP=1 ./scripts/demo/tmux_three_machine_demo.sh open
 - [x] Fix `couldn't find all security files` during secure node startup by using `ROS_SECURITY_ENCLAVE_OVERRIDE` / `--ros-args --enclave`.
 - [x] Add Experiment 02 folder-level run, policy validation, and evidence collection helpers.
 - [ ] Validate that the controller can start with `ROS_SECURITY_ENABLE=true` in the real WSL terminal.
-- [ ] Verify that the `attacker` node is blocked when it lacks the correct certificate or permission.
+- [x] Verify that the `attacker` node is blocked when it lacks the correct certificate or permission. Runtime symptom: FastDDS refuses to create the `/cmd_vel_in` data writer for `/attacker`.
 
 ### Step 2: Bridge Network for MITM
 - [x] Set up a bridge-mode environment to re-enable ARP Spoofing experiments as per the Mid-Progress Report.
