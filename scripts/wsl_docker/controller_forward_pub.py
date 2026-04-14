@@ -14,7 +14,7 @@ class ForwardPublisher(Node):
         self.count = 0
         self.timer = self.create_timer(0.1, self.tick)
         self.log_timer = self.create_timer(1.0, self.log_status)
-        self.get_logger().info('Forward publisher started: /cmd_vel @ 10Hz (wall timer)')
+        self.get_logger().info('Forward publisher started: /cmd_vel_in @ 10Hz (wall timer)')
 
     def tick(self):
         self.pub.publish(self.msg)

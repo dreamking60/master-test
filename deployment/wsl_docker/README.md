@@ -31,7 +31,7 @@ It also appends environment defaults to `~/.bashrc`:
 ```bash
 source /opt/ros/jazzy/setup.bash
 export TURTLEBOT3_MODEL=burger
-export ROS_DOMAIN_ID=30
+export ROS_DOMAIN_ID=0
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 ```
@@ -49,7 +49,7 @@ If you skipped the installer script, install manually:
 
 ```bash
 sudo apt update
-sudo apt install -y docker.io docker-compose-v2
+sudo apt install -y docker.io docker-compose-v2 tmux
 ```
 
 Check:
@@ -71,6 +71,34 @@ From project root:
 
 ```bash
 ./scripts/wsl_docker/up.sh
+```
+
+## One-command tmux demo
+
+For presentation/demo use, launch the three-role view in tmux:
+
+```bash
+./scripts/demo/tmux_three_machine_demo.sh open
+```
+
+This opens three panes. The panes represent roles/environments, not three Docker containers:
+
+- `ROBOT_GAZEBO_WSL_HOST`: Gazebo + relay + bridge on the WSL host
+- `CONTROLLER_DOCKER`: normal controller container
+- `ATTACKER_DOCKER`: attacker container
+
+By default the attacker pane waits for Enter, so you can first show the normal robot movement and then trigger the attack during the presentation.
+
+To auto-start the attacker after a delay:
+
+```bash
+ATTACK_DELAY=12 ./scripts/demo/tmux_three_machine_demo.sh open
+```
+
+For the SROS2 defense demo:
+
+```bash
+./scripts/demo/tmux_sros2_defense_demo.sh
 ```
 
 ## 4) Launch Gazebo on host
@@ -111,14 +139,42 @@ After controller is running for a few seconds:
 
 You should observe trajectory deviation in Gazebo when attack commands dominate `/cmd_vel`.
 
+## 7) Secure SROS2 mode
+
+Generate or refresh SROS2 keys and policy-based permissions:
+
+```bash
+./scripts/wsl_docker/init_sros2_docker.sh
+```
+
+Start Gazebo/relay/bridge with the `/gazebo` enclave:
+
+```bash
+./scripts/setup/run_wsl_gazebo_secure.sh
+```
+
+Start secure containers and the controller:
+
+```bash
+sudo ./scripts/wsl_docker/secure_start_controller_stack.sh
+```
+
+Then try the attacker:
+
+```bash
+sudo ./scripts/wsl_docker/run_attacker.sh
+```
+
+The policy in `config/sros2_wsl_docker_policy.xml` grants `/controller` permission to publish `/cmd_vel_in`, while `/attacker` is not granted command-topic publication permission.
+
 ## Useful helper commands
 
 ```bash
 # topic list from controller container
 ./scripts/wsl_docker/exec_controller.sh "ros2 topic list"
 
-# watch cmd_vel from attacker container
-./scripts/wsl_docker/exec_attacker.sh "ros2 topic echo /cmd_vel --once"
+# watch relay input from attacker container
+./scripts/wsl_docker/exec_attacker.sh "ros2 topic echo /cmd_vel_in --once"
 
 # stop containers
 ./scripts/wsl_docker/down.sh

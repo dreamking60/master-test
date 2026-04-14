@@ -8,4 +8,4 @@ COMPOSE_CMD="$(resolve_compose_cmd)"
 
 cd "$PROJECT_ROOT/deployment/wsl_docker"
 $COMPOSE_CMD exec attacker bash -lc \
-  "source /opt/ros/jazzy/setup.bash && mkdir -p /workspace/project/logs/wsl_docker && python3 /workspace/project/scripts/wsl_docker/attacker_turn_pub.py 2>&1 | tee -a /workspace/project/logs/wsl_docker/attacker_pub.log"
+  "source /opt/ros/jazzy/setup.bash && mkdir -p /workspace/project/logs/wsl_docker && python3 /workspace/project/scripts/wsl_docker/attacker_turn_pub.py --ros-args --enclave /attacker 2>&1 | tee -a /workspace/project/logs/wsl_docker/attacker_pub.log"

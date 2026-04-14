@@ -14,7 +14,7 @@ services:
       ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
       ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
       ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
-      ROS_SECURITY_ENCLAVE: /controller
+      ROS_SECURITY_ENCLAVE_OVERRIDE: /controller
     volumes:
       - ../../:/workspace/project:rw
     working_dir: /workspace/project
@@ -42,7 +42,7 @@ services:
       ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
       ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
       ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
-      ROS_SECURITY_ENCLAVE: /attacker
+      ROS_SECURITY_ENCLAVE_OVERRIDE: /attacker
     volumes:
       - ../../:/workspace/project:rw
     working_dir: /workspace/project

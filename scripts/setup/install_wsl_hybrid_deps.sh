@@ -46,6 +46,7 @@ fi
 apt install -y \
   docker.io \
   docker-compose-v2 \
+  tmux \
   "$ROS_DESKTOP_PKG" \
   "$ROS_TB3_GAZEBO_PKG"
 
