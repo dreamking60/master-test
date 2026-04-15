@@ -109,6 +109,7 @@ EOF
 if [[ "$MODE" == "open" ]]; then
   GAZEBO_RUN="./scripts/setup/run_wsl_gazebo.sh"
   CONTROLLER_RUN="sudo ./scripts/wsl_docker/start_controller_stack.sh"
+  ATTACKER_STACK_UP="sudo ./scripts/wsl_docker/up.sh"
   ATTACKER_RUN="sudo ./scripts/wsl_docker/run_attacker.sh"
   GAZEBO_ROLE="Robot/Gazebo role on WSL host, not Docker. Runs Gazebo, ros_gz_bridge, and cmd_vel_relay."
   CONTROLLER_ROLE="Controller machine in Docker. Publishes legitimate forward commands to /cmd_vel_in."
@@ -116,6 +117,7 @@ if [[ "$MODE" == "open" ]]; then
 else
   GAZEBO_RUN="./scripts/setup/run_wsl_gazebo_secure.sh"
   CONTROLLER_RUN="sudo ./scripts/wsl_docker/secure_start_controller_stack.sh"
+  ATTACKER_STACK_UP="sudo ./scripts/wsl_docker/secure_up.sh"
   ATTACKER_RUN="sudo ./scripts/wsl_docker/run_attacker.sh"
   GAZEBO_ROLE="Secure Robot/Gazebo role on WSL host, not Docker. Uses SROS2 enclave /gazebo."
   CONTROLLER_ROLE="Secure controller machine in Docker. Uses SROS2 enclave /controller."
@@ -140,9 +142,9 @@ tmux set-option -t "$SESSION" pane-border-status top >/dev/null
 tmux set-option -t "$SESSION" pane-border-format " #{pane_index}: #{pane_title} " >/dev/null
 tmux set-option -t "$SESSION" remain-on-exit on >/dev/null
 
-tmux send-keys -t "$SESSION:0.0" "$(banner_cmd 'ROLE 1: ROBOT / GAZEBO (WSL HOST)' "$GAZEBO_ROLE" '/cmd_vel via ros_gz_bridge') $(gazebo_pane_run_cmd)" C-m
-tmux send-keys -t "$SESSION:0.1" "$(banner_cmd 'ROLE 2: CONTROLLER (DOCKER)' "$CONTROLLER_ROLE" '/cmd_vel_in') sleep 8; $CONTROLLER_RUN" C-m
-tmux send-keys -t "$SESSION:0.2" "$(banner_cmd 'ROLE 3: ATTACKER (DOCKER)' "$ATTACKER_ROLE" '/cmd_vel_in') $ATTACK_GATE; $ATTACKER_RUN" C-m
+tmux send-keys -t "$SESSION:0.0" "$(banner_cmd 'ROLE 1: ROBOT / GAZEBO (WSL HOST)' "$GAZEBO_ROLE" '/cmd_vel via ros_gz_bridge'); $(gazebo_pane_run_cmd)" C-m
+tmux send-keys -t "$SESSION:0.1" "$(banner_cmd 'ROLE 2: CONTROLLER (DOCKER)' "$CONTROLLER_ROLE" '/cmd_vel_in'); sleep 8; $CONTROLLER_RUN" C-m
+tmux send-keys -t "$SESSION:0.2" "$(banner_cmd 'ROLE 3: ATTACKER (DOCKER)' "$ATTACKER_ROLE" '/cmd_vel_in'); $ATTACK_GATE; echo; echo 'Ensuring attacker Docker service is running...'; $ATTACKER_STACK_UP; echo; $ATTACKER_RUN" C-m
 
 cat <<EOF
 Started tmux session: $SESSION

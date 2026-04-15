@@ -64,6 +64,11 @@ def generate_launch_description():
         output='screen',
     )
 
+    trail_cmd = ExecuteProcess(
+        cmd=['python3', os.path.join(project_root, 'scripts', 'setup', 'trajectory_trail_spawner.py')],
+        output='screen',
+    )
+
     # Force physics to run in case GUI starts in paused state.
     unpause_world_cmd = TimerAction(
         period=4.0,
@@ -94,6 +99,7 @@ def generate_launch_description():
     ld.add_action(spawn_turtlebot_cmd)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(relay_cmd)
+    ld.add_action(trail_cmd)
     ld.add_action(bridge_cmd)
     ld.add_action(unpause_world_cmd)
     ld.add_action(set_env_vars_resources)

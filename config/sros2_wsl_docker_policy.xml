@@ -62,6 +62,23 @@
           </services>
         </profile>
 
+        <profile ns="/" node="trajectory_trail_spawner">
+          <topics publish="ALLOW">
+            <topic>/rosout</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <topics subscribe="ALLOW">
+            <topic>/odom</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <services reply="ALLOW">
+            <service>/*</service>
+          </services>
+          <services request="ALLOW">
+            <service>/*</service>
+          </services>
+        </profile>
+
         <profile ns="/" node="ros_gz_bridge">
           <topics publish="ALLOW" subscribe="ALLOW">
             <topic>/*</topic>

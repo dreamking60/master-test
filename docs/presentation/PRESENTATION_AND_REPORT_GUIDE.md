@@ -96,7 +96,28 @@ The tmux demo does not automatically launch ARP poisoning. For the isolated brid
 sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20
 ```
 
-### Slide 7: Future Work - SLAM Security
+### Slide 7: SROS2 DoS / Availability
+
+Claim:
+
+```text
+SROS2 blocks unauthorized command injection, but availability still needs separate protection.
+```
+
+Show:
+
+- DDS/RTPS UDP flood targeted discovered ports `7400, 7410-7423`.
+- Attacker sent `613,326` packets in `26.2s`.
+- Controller showed about 3 seconds of publish-loop stall.
+- Relay logged `No /cmd_vel_in for 2.93s` and sent zero `/cmd_vel`.
+
+Reference:
+
+```text
+docs/presentation/DOS_QA_CHEATSHEET.md
+```
+
+### Slide 8: Future Work - SLAM Security
 
 Connect command-channel security to perception security:
 
@@ -110,8 +131,9 @@ Connect command-channel security to perception security:
 | --- | --- | --- | --- | --- |
 | 01 | SROS2 off | extra publisher on command path | robot deviates | trajectory, logs, topic info |
 | 02 | SROS2 on | attacker without command permission | attacker blocked | permissions XML, topic info, robot behavior |
-| 03 | SROS2 off/on | network-path MITM | depends on topology/security | ARP cache, packet capture, command log |
-| 04 | TBD | SLAM input corruption | mapping/localization degradation | map quality, drift metrics |
+| 03 | SROS2 on | DDS/RTPS UDP flood | short availability degradation | packet count, controller stall, relay watchdog |
+| 04 | SROS2 off/on | network-path MITM | depends on topology/security | ARP cache, packet capture, command log |
+| 05 | TBD | SLAM input corruption | mapping/localization degradation | map quality, drift metrics |
 
 ## Writing Advice
 
@@ -123,7 +145,7 @@ Use this structure in the final report:
 4. Network-layer extension.
 5. Limitations and future work.
 
-Be precise about what has been verified and what is still planned. For example, the open injection experiment is verified in WSL + Docker, while the SROS2 policy is implemented but runtime validation is still being debugged.
+Be precise about what has been verified and what is still planned. For example, the open injection and SROS2 access-control experiments are verified in WSL + Docker, while trajectory CSV quantification for the SROS2 DoS run still needs a recorder launched with the correct security enclave.
 
 ## Suggested Figures
 
@@ -132,6 +154,7 @@ Be precise about what has been verified and what is still planned. For example, 
 - Data path diagram: `/cmd_vel_in -> relay -> /cmd_vel`.
 - Trajectory plot: normal vs attacked.
 - SROS2 permission diagram: controller allowed, attacker denied.
+- DoS evidence: DDS ports, packet count, controller stall, relay watchdog.
 - MITM topology: controller, attacker router, robot.
 
 ## Key Terms
@@ -140,4 +163,5 @@ Be precise about what has been verified and what is still planned. For example, 
 - Unauthorized command injection: an attacker publishes robot command messages without permission.
 - Publisher competition: multiple publishers write to the same command path, and effective behavior can be dominated by rate/timing.
 - SROS2 enclave: security identity and permission boundary for ROS2 nodes.
+- DDS/RTPS UDP flood: availability test that stresses ROS2 middleware ports without becoming an authorized command publisher.
 - MITM: attacker controls or observes the network path between legitimate endpoints.

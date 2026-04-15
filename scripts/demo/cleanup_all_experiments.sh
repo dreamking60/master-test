@@ -6,7 +6,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 echo "Cleaning previous experiment state..."
 
-for session in tb3_security_demo tb3_sros2_defense_demo tb3_network_mitm_demo; do
+for session in tb3_security_demo tb3_sros2_defense_demo tb3_network_mitm_demo sros2_dos_demo; do
   if tmux has-session -t "$session" 2>/dev/null; then
     echo "  killing tmux session: $session"
     tmux kill-session -t "$session" || true
@@ -14,10 +14,10 @@ for session in tb3_security_demo tb3_sros2_defense_demo tb3_network_mitm_demo; d
 done
 
 echo "  stopping host-network controller/attacker containers"
-(cd "$PROJECT_ROOT" && sudo ./scripts/wsl_docker/down.sh) >/dev/null 2>&1 || true
+(cd "$PROJECT_ROOT" && sudo -n ./scripts/wsl_docker/down.sh) >/dev/null 2>&1 || true
 
 echo "  stopping MITM bridge lab containers"
-(cd "$PROJECT_ROOT" && sudo ./scripts/wsl_docker/mitm_down.sh) >/dev/null 2>&1 || true
+(cd "$PROJECT_ROOT" && sudo -n ./scripts/wsl_docker/mitm_down.sh) >/dev/null 2>&1 || true
 
 echo "  stopping Gazebo/ROS launch leftovers"
 pkill -f "ros2 launch .*turtlebot3" 2>/dev/null || true

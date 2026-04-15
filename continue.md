@@ -47,6 +47,33 @@ This project focuses on analyzing and defending against cyber-physical attacks o
     - Added `experiments/02_sros2_cmd_vel_defense/collect_evidence.sh`.
 - **File System Adaption**: Fixed directory structure and identified FastDDS security file naming requirements in the Jazzy environment.
 
+### ✅ New Experiment Draft: SROS2 UDP DoS / Availability Attack
+- This is a separate experiment from the SROS2 access-control defense experiment.
+- It reuses the successful SROS2 secure baseline only as a control condition: secure Gazebo/relay with enclave `/gazebo`, secure controller with enclave `/controller`, and the robot moving normally before any attack starts.
+- The first bug found in `scripts/demo/tmux_sros2_dos_demo.sh` was that it started non-secure Gazebo with `scripts/setup/run_wsl_gazebo.sh` while starting a secure controller. That mismatch explains why the controller failed before the attacker began.
+- The DoS tmux script has been adjusted to start `scripts/setup/run_wsl_gazebo_secure.sh` and `scripts/wsl_docker/secure_start_controller_stack.sh`, matching the known-good SROS2 defense baseline.
+- The attacker pane now waits for manual confirmation by default, so the baseline can be observed first.
+- New observation: if the controller stops but the robot keeps moving, that does not necessarily mean the DoS attack succeeded or failed. The Gazebo velocity plugin can keep applying the last received non-zero `/cmd_vel` command.
+- Mitigation added for cleaner experiments:
+    - `scripts/wsl_docker/controller_forward_pub.py` publishes a zero `Twist` before normal shutdown.
+    - `scripts/setup/cmd_vel_relay.py` has a 0.5s input watchdog; if `/cmd_vel_in` stops arriving, it publishes a zero `/cmd_vel`.
+- Initial DoS result: the robot continued moving normally after the UDP flood started. With the relay watchdog now validated, this is a negative result for the first DoS variant rather than an environment failure.
+- Follow-up observation: square-path movement is useful, but raw square trajectories naturally vary slightly even without attack. The DoS result should therefore be judged with logs/metrics and a visible trajectory trace, not by small shape differences alone.
+- The DoS generator was revised from fixed-port random UDP flooding to local DDS port discovery plus RTPS-like payloads. The tmux monitor now shows Docker resource usage, DDS UDP sockets, and controller logs during the attack.
+- The controller now supports `CONTROLLER_PATTERN=square` in addition to the default forward mode. The DoS tmux demo uses the square path so timing delay, packet loss, or control-loop disruption is easier to see than with continuous straight-line motion.
+- Added Gazebo-visible trajectory marking:
+    - `scripts/setup/trajectory_trail_spawner.py` subscribes `/odom` and spawns orange ground discs in Gazebo as the robot moves.
+    - The first implementation used inline SDF in `gz service --req`, but the markers were not visible and the failure mode was hard to inspect. It was revised to write marker SDF files into `/tmp/tb3_trajectory_trail/` and call Gazebo with `sdf_filename`, while logging successful and failed marker creation.
+    - The node is launched from `launch/turtlebot3_empty_world_custom_bridge.launch.py`, so both the open injection experiment and the SROS2/DoS experiments get visible trail markers.
+    - The SROS2 policy grants `/gazebo` enclave node `trajectory_trail_spawner` permission to subscribe `/odom`; regenerate SROS2 artifacts after this policy change.
+- Added log-driven validation automation:
+    - `scripts/experiments/run_log_driven_validation.sh` runs `open-injection`, `sros2-dos`, or `all` without tmux and saves evidence under `logs/experiments/log_driven_validation/<timestamp>/`.
+    - `scripts/experiments/summarize_trajectory.py` splits trajectory CSVs into baseline / attack / after phases and reports distance, yaw change, average velocities, sample gaps, and a conservative classification.
+    - `scripts/setup/install_codex_sudoers.sh` installs a limited NOPASSWD sudoers file for only the project scripts needed by automation; it does not grant global Docker/root access.
+    - `scripts/wsl_docker/docker_status.sh` is the bounded sudoable wrapper used to collect Docker ps/stats evidence.
+    - This is intended for evaluating attack impact from logs and trajectory metrics instead of relying only on visual inspection.
+- Experimental limitation: random UDP payloads may be dropped during RTPS parsing before SROS2 signature verification. Therefore this should currently be described as a DDS/RTPS UDP flood availability test, not as proven cryptographic-verification exhaustion.
+
 ### ✅ Injection Attack (Verified)
 - Re-verified that the non-secure injection attack works in the new hybrid setup with `ROS_DOMAIN_ID=0`.
 
@@ -103,6 +130,20 @@ SKIP_CLEANUP=1 ./scripts/demo/tmux_three_machine_demo.sh open
 - [x] Add Experiment 02 folder-level run, policy validation, and evidence collection helpers.
 - [ ] Validate that the controller can start with `ROS_SECURITY_ENABLE=true` in the real WSL terminal.
 - [x] Verify that the `attacker` node is blocked when it lacks the correct certificate or permission. Runtime symptom: FastDDS refuses to create the `/cmd_vel_in` data writer for `/attacker`.
+- [x] Fix `tmux_sros2_defense_demo.sh` startup race/command-concatenation issue. The root wrapper calls `tmux_three_machine_demo.sh secure`; the shared tmux script now separates the banner command from the pane command with an explicit shell separator, so `read -r -p ...` is no longer accidentally appended to `printf '\n'`. The attacker pane also runs `secure_up.sh` before `run_attacker.sh`, so `service "attacker" is not running` should not occur if Docker itself is healthy.
+
+### Step 1B: SROS2 UDP DoS / Availability Experiment
+- [x] Compare the DoS tmux script against the known-good SROS2 defense startup path.
+- [x] Fix the baseline mismatch: secure controller must not be paired with non-secure Gazebo/relay.
+- [x] Validate relay/controller stop behavior so the robot does not keep executing stale `/cmd_vel` after controller shutdown.
+- [x] Add square-path controller mode for DoS observation.
+- [x] Add Gazebo-visible `/odom` trajectory dots for DoS and open injection demos.
+- [x] Add non-tmux log-driven validation runner and trajectory summary tool.
+- [x] Add limited sudoers installer and bounded Docker status helper for non-interactive evidence collection.
+- [ ] Re-run `scripts/demo/tmux_sros2_dos_demo.sh` with discovered DDS ports and record whether CPU, message rate, or trajectory changes.
+- [ ] Install the project sudoers whitelist once with `sudo ./scripts/setup/install_codex_sudoers.sh`.
+- [ ] Run `scripts/experiments/run_log_driven_validation.sh all` in the real WSL terminal after sudo NOPASSWD is configured, then inspect generated evidence directories.
+- [ ] If the attack has no measurable impact, refine the traffic generator so it produces more realistic RTPS-shaped traffic rather than pure random UDP payloads.
 
 ### Step 2: Bridge Network for MITM
 - [x] Set up a bridge-mode environment to re-enable ARP Spoofing experiments as per the Mid-Progress Report.
