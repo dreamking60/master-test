@@ -16,6 +16,7 @@ class ForwardPublisher(Node):
         self.angular_speed = float(os.environ.get('CONTROLLER_ANGULAR_SPEED', '0.8'))
         self.square_side_seconds = float(os.environ.get('CONTROLLER_SQUARE_SIDE_SECONDS', '4.0'))
         self.square_turn_seconds = float(os.environ.get('CONTROLLER_SQUARE_TURN_SECONDS', '1.96'))
+        self.zigzag_period_seconds = float(os.environ.get('CONTROLLER_ZIGZAG_PERIOD_SECONDS', '1.0'))
         self.started_at = time.monotonic()
         self.current_phase = None
         self.count = 0
@@ -49,9 +50,27 @@ class ForwardPublisher(Node):
 
         return msg
 
+    def build_zigzag_msg(self):
+        msg = Twist()
+        elapsed = time.monotonic() - self.started_at
+        half_period = max(self.zigzag_period_seconds / 2.0, 0.1)
+        turn_left = int(elapsed / half_period) % 2 == 0
+        phase = 'zig-left' if turn_left else 'zig-right'
+
+        msg.linear.x = self.linear_speed
+        msg.angular.z = self.angular_speed if turn_left else -self.angular_speed
+
+        if phase != self.current_phase:
+            self.current_phase = phase
+            self.get_logger().info(f'zigzag phase={phase}')
+
+        return msg
+
     def build_msg(self):
         if self.pattern == 'square':
             return self.build_square_msg()
+        if self.pattern in ('zigzag', 'weave'):
+            return self.build_zigzag_msg()
         return self.build_forward_msg()
 
     def tick(self):
