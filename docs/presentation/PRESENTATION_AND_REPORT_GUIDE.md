@@ -1,5 +1,25 @@
 # Presentation and Report Guide
 
+## Core Presentation Logic
+
+The presentation should emphasize experiment design, not only implementation. For each experiment, use the same structure:
+
+```text
+Goal -> Hypothesis -> Experiment Design -> Evidence/Measurement -> Result -> Conclusion
+```
+
+A useful speaking pattern is:
+
+```text
+The goal of this experiment was to verify [security claim].
+To test it, I designed [controlled setup].
+I measured [specific evidence].
+The result was [observed data].
+This supports the conclusion that [security meaning].
+```
+
+This makes the project sound like a security evaluation rather than a collection of scripts.
+
 ## Recommended Presentation Structure
 
 ### Slide 1: Project Motivation
@@ -31,10 +51,30 @@ Explain why the project moved from three VMware VMs to WSL + Docker:
 
 ### Slide 4: Experiment 01 - Open Injection
 
-Claim:
+Goal:
 
 ```text
-Without SROS2, any discovered node can publish robot motion commands.
+Verify whether an unauthorized ROS2 node can affect robot motion when SROS2 is disabled.
+```
+
+Design:
+
+```text
+Controller publishes forward commands.
+Attacker publishes competing turn commands.
+Gazebo executes the resulting command stream.
+```
+
+Measurement:
+
+```text
+Robot trajectory, topic publishers, relay logs.
+```
+
+Conclusion:
+
+```text
+Without authentication or access control, a discovered attacker node can influence robot motion.
 ```
 
 Show:
@@ -52,7 +92,27 @@ Demo command:
 
 ### Slide 5: Experiment 02 - SROS2 Defense
 
-Claim:
+Goal:
+
+```text
+Verify whether SROS2 can block unauthorized command publishers while allowing the legitimate controller.
+```
+
+Design:
+
+```text
+/controller can publish /cmd_vel_in.
+/gazebo can subscribe and relay.
+/attacker has no command-topic publish permission.
+```
+
+Measurement:
+
+```text
+Controller behavior, attacker error logs, generated permissions.
+```
+
+Conclusion:
 
 ```text
 SROS2 changes the problem from open publication to authenticated, permission-controlled publication.
@@ -72,7 +132,25 @@ Demo command:
 
 ### Slide 6: Experiment 03 - MITM
 
-Claim:
+Goal:
+
+```text
+Verify whether a network-path attacker can position itself between controller and robot.
+```
+
+Design:
+
+```text
+Use Docker bridge instead of host networking, so controller, robot, and attacker have independent IP/MAC identities.
+```
+
+Measurement:
+
+```text
+ARP tables, qdisc state, ping RTT, ROS2 command latency.
+```
+
+Conclusion:
 
 ```text
 Network-path attacks require a different topology from open publisher injection.
@@ -98,7 +176,25 @@ sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20
 
 ### Slide 7: SROS2 DoS / Availability
 
-Claim:
+Goal:
+
+```text
+Verify whether SROS2-secured command traffic can still suffer availability degradation.
+```
+
+Design:
+
+```text
+Run secure controller and secure Gazebo, then flood discovered DDS/RTPS UDP ports without becoming a valid publisher.
+```
+
+Measurement:
+
+```text
+Packet count, attacker CPU, controller stall, relay watchdog.
+```
+
+Conclusion:
 
 ```text
 SROS2 blocks unauthorized command injection, but availability still needs separate protection.
@@ -115,6 +211,7 @@ Reference:
 
 ```text
 docs/presentation/DOS_QA_CHEATSHEET.md
+docs/presentation/SECURITY_PRE_QA_CHEATSHEET.md
 ```
 
 ### Slide 8: Future Work - SLAM Security
@@ -127,13 +224,14 @@ Connect command-channel security to perception security:
 
 ## Suggested Result Table
 
-| Experiment | Security Mode | Attack Method | Expected Result | Evidence |
+| Experiment | Goal | Design | Verified Result | Conclusion |
 | --- | --- | --- | --- | --- |
-| 01 | SROS2 off | extra publisher on command path | robot deviates | trajectory, logs, topic info |
-| 02 | SROS2 on | attacker without command permission | attacker blocked | permissions XML, topic info, robot behavior |
-| 03 | SROS2 on | DDS/RTPS UDP flood | short availability degradation | packet count, controller stall, relay watchdog |
-| 04 | SROS2 off/on | network-path MITM | depends on topology/security | ARP cache, packet capture, command log |
-| 05 | TBD | SLAM input corruption | mapping/localization degradation | map quality, drift metrics |
+| 01 Open Injection | test default ROS2 exposure | attacker publishes competing command topic | robot deviates | open ROS2 command path is unsafe |
+| 02 SROS2 Defense | test authorization | attacker lacks command permission | publisher blocked | SROS2 blocks unauthorized command injection |
+| 03 SROS2 DoS | test availability boundary | flood DDS/RTPS ports | stalls/watchdog events | SROS2 is not full availability defense |
+| 04 Open MITM | test network-path control | ARP poison bridge endpoints | latency/gap increases, tamper possible in open mode | MITM topology reproduced |
+| 05 SROS2 MITM | test protected payload under MITM | ARP MITM + encrypted DDS | delay/drop but no valid rewrite | SROS2 protects integrity, not availability |
+| 06 SLAM Future Work | test perception integrity | corrupt `/scan`, `/odom`, `/tf`, camera/map | not implemented yet | future security layer |
 
 ## Writing Advice
 
@@ -156,6 +254,7 @@ Be precise about what has been verified and what is still planned. For example, 
 - SROS2 permission diagram: controller allowed, attacker denied.
 - DoS evidence: DDS ports, packet count, controller stall, relay watchdog.
 - MITM topology: controller, attacker router, robot.
+- SROS2 MITM evidence: ARP poisoning succeeded, `tc netem` delay/loss applied, SROS2 command latency/gaps increased, but command payload was not validly rewritten.
 
 ## Key Terms
 
@@ -165,3 +264,4 @@ Be precise about what has been verified and what is still planned. For example, 
 - SROS2 enclave: security identity and permission boundary for ROS2 nodes.
 - DDS/RTPS UDP flood: availability test that stresses ROS2 middleware ports without becoming an authorized command publisher.
 - MITM: attacker controls or observes the network path between legitimate endpoints.
+- Availability degradation: the robot communication path remains protected from unauthorized commands, but packet delay/loss creates timing gaps or watchdog stop events.

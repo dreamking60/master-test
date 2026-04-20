@@ -67,6 +67,7 @@ python3 attack_cmd_vel_EN.py --attack forward --speed 0.5 --duration 10
 - **Attack Experiments**: `attack_experiments/README_EN.md` - English version attack experiment documentation
 - **Experiment Index**: `experiments/README.md` - Presentation/report-oriented experiment folders and evidence checklist
 - **Presentation Guide**: `docs/presentation/PRESENTATION_AND_REPORT_GUIDE.md` - Suggested PRE structure, result table, and report writing guidance
+- **PRE Q&A Cheatsheet**: `docs/presentation/SECURITY_PRE_QA_CHEATSHEET.md` - Common defense questions for injection, SROS2, DoS, and MITM experiments
 - **Final Report Draft**: `docs/FINAL_REPORT_DRAFT.md` - Final report draft based on the mid-progress report and migrated experiments
 - **PPT Build Plan**: `docs/presentation/PPT_BUILD_PLAN.md` - Slide-by-slide presentation construction plan
 - **WSL + Docker Hybrid Setup**: `deployment/wsl_docker/README.md` - Gazebo on WSL host, controller/attacker in containers

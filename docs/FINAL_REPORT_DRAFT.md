@@ -362,13 +362,13 @@ It creates three endpoints:
 | `tb3-mitm-robot` | target endpoint | `172.28.0.20` |
 | `tb3-mitm-attacker` | MITM endpoint | `172.28.0.50` |
 
-The tmux demo is:
+The MITM lab uses Docker bridge/NAT networking rather than Docker host networking. This is necessary because ARP poisoning requires separate layer-2 identities. The tmux demo is:
 
 ```bash
 ./experiments/03_network_mitm/run_demo.sh
 ```
 
-### 7.4 ARP Helper
+### 7.4 ARP Helper and Attack Path
 
 A constrained ARP helper was added:
 
@@ -395,11 +395,110 @@ Execute in the isolated lab:
 sudo ./scripts/wsl_docker/mitm_arp_poison.sh --execute --restore --duration 20
 ```
 
-### 7.5 Result Status
+The active MITM path is:
 
-The Docker bridge topology, tmux demo, evidence collection, and constrained ARP helper have been migrated. The next step is to connect this network-layer setup to ROS2 command traffic measurement, such as measuring topic visibility or command delivery while ARP state changes.
+```text
+controller 172.28.0.10
+  -> attacker 172.28.0.50 as poisoned next hop
+  -> robot endpoint 172.28.0.20
+```
 
-### 7.6 Security Finding
+The attacker enables IPv4 forwarding so the connection remains alive, then applies `tc netem` delay/loss to degrade traffic passing through it. This distinguishes a stable MITM from a simple denial of service: the attacker forwards traffic while modifying timing and reliability.
+
+### 7.5 Open ROS2 MITM Result
+
+The recorded open-mode MITM run generated evidence under:
+
+```text
+logs/experiments/03_network_mitm/recorded_20260419_120134/
+```
+
+Key observations:
+
+| Metric | Result |
+| --- | ---: |
+| Ping RTT average | `547.7 ms` |
+| Ping RTT maximum | `2383.0 ms` |
+| ROS2 command last-latency average | `286.3 ms` |
+| ROS2 command max-latency observed | `2335.0 ms` |
+| ROS2 max command gap | `1418.9 ms` |
+
+ARP evidence confirmed that during the attack the controller's ARP table mapped the robot IP to the attacker MAC, and the robot's ARP table mapped the controller IP to the attacker MAC. The attacker also recorded forwarded ICMP and DDS/RTPS UDP traffic. This validates that the attacker was positioned in the communication path and could degrade ROS2 command timing.
+
+### 7.6 SROS2-Protected MITM Result
+
+The SROS2 MITM run generated evidence under:
+
+```text
+logs/experiments/03_network_mitm/sros2_recorded_20260420_051959/
+```
+
+The attack used:
+
+```text
+tc netem delay 500ms loss 5%
+```
+
+During the attack:
+
+```text
+controller ARP: 172.28.0.20 -> attacker MAC 0a:7e:45:dd:6c:f6
+robot ARP:      172.28.0.10 -> attacker MAC 0a:7e:45:dd:6c:f6
+ip_forward:     enabled
+```
+
+Measured impact:
+
+| Metric | Result |
+| --- | ---: |
+| Ping RTT average | `537.7 ms` |
+| Ping RTT maximum | `2673.0 ms` |
+| SROS2 `/mitm_cmd` last-latency average | `264.9 ms` |
+| SROS2 `/mitm_cmd` max-latency observed | `2174.5 ms` |
+| SROS2 max command gap | `2531.3 ms` |
+
+The result supports a layered security conclusion. SROS2 does not prevent ARP poisoning itself, because ARP is below ROS2/DDS Security. However, DDS Security prevents a normal network-path attacker from rewriting protected command payloads into valid commands. The attacker can still delay or drop encrypted DDS/RTPS packets, causing availability degradation.
+
+### 7.7 SROS2 Gazebo MITM Visual Result
+
+A Gazebo-visible SROS2 MITM variant was added:
+
+```bash
+ATTACK_DELAY_MS=500 ATTACK_LOSS_PERCENT=5 ATTACK_DURATION=45 \
+  ./scripts/demo/tmux_sros2_gazebo_mitm_demo.sh
+```
+
+This version connects the secure MITM path to Gazebo:
+
+```text
+secure controller container, enclave /mitm_controller
+  -> encrypted/authenticated /mitm_cmd
+  -> ARP MITM attacker with delay/loss
+  -> secure robot-gateway container, enclave /mitm_robot
+  -> unchanged UDP forwarding to WSL Gazebo
+  -> secure WSL UDP receiver and cmd_vel relay, enclave /gazebo
+  -> Gazebo TurtleBot3
+```
+
+The supporting log is:
+
+```text
+logs/experiments/03_network_mitm/sros2_gazebo_udp_receiver.log
+```
+
+This visual run showed:
+
+| Metric | Result |
+| --- | ---: |
+| UDP receiver samples | `175` |
+| Average receive rate | `8.37 commands/s` |
+| Expected normal receive rate | `10 commands/s` |
+| Maximum ROS command latency | `2996.1 ms` |
+| Watchdog stop events | `13` |
+
+The Gazebo version intentionally disables command tampering. In SROS2 mode, the correct result is not a clean straight-to-turn modification. The correct result is degraded availability: command delays, short gaps, and watchdog stop commands. A clean command rewrite would require credential compromise or a deliberately misconfigured SROS2 policy, not a normal MITM bypass.
+
+### 7.8 Security Finding
 
 Network-layer MITM is a different class of risk than publisher injection. SROS2 can protect confidentiality and integrity of DDS messages, but it does not prevent traffic dropping or availability attacks. Network security and ROS2 security should be treated as complementary defenses.
 
@@ -427,8 +526,10 @@ This project contributes:
 4. A SROS2 availability test showing short command-path interruptions under DDS/RTPS UDP flood traffic.
 5. A Docker bridge MITM lab with isolated endpoint identities.
 6. A constrained ARP helper for controlled MITM testing.
-7. A presentation/report-oriented experiment structure under `experiments/`.
-8. tmux-based demos that show robot, controller, and attacker roles in separate panes.
+7. Open and SROS2 MITM evidence runners that record ARP tables, qdisc state, packet captures, and command-latency statistics.
+8. Gazebo-visible MITM demos for both open command tampering and SROS2 availability degradation.
+9. A presentation/report-oriented experiment structure under `experiments/`.
+10. tmux-based demos that show robot, controller, and attacker roles in separate panes.
 
 ## 10. Limitations
 
@@ -436,11 +537,11 @@ The project has several limitations:
 
 - Gazebo is not containerized in the working setup; it runs on the WSL host for reliable GUI support.
 - The SROS2 DoS experiment currently has log evidence of command-path interruptions, but the first trajectory CSV run failed because the recorder was not launched with a matching SROS2 enclave.
-- The Docker bridge MITM lab currently validates topology and ARP manipulation, but still needs ROS2 command-traffic measurement integrated into the MITM phase.
+- The Docker bridge MITM lab now measures ROS2 command latency and Gazebo command-receiver behavior, but the Gazebo visual effect is still less dramatic than open command tampering because SROS2 correctly prevents payload rewriting.
 - The SLAM security experiment is documented as future work and has not yet been fully implemented.
 
 ## 11. Conclusion
 
-The project successfully migrated a ROS2 TurtleBot3 security workflow from a difficult multi-VM setup to a more maintainable WSL + Docker environment. The migrated system preserves the key security roles while keeping Gazebo visible on the host. The open ROS2 injection experiment demonstrates the risk of unauthenticated command topics. The SROS2 defense work shows how enclave-based permissions can restrict command publishers. The SROS2 DoS experiment further shows that access control does not fully solve availability: a DDS/RTPS UDP flood caused short command-path interruptions even though it did not bypass authorization or permanently disable the robot. The network MITM work establishes an isolated bridge topology for layer-2 security experiments.
+The project successfully migrated a ROS2 TurtleBot3 security workflow from a difficult multi-VM setup to a more maintainable WSL + Docker environment. The migrated system preserves the key security roles while keeping Gazebo visible on the host. The open ROS2 injection experiment demonstrates the risk of unauthenticated command topics. The SROS2 defense work shows how enclave-based permissions can restrict command publishers. The SROS2 DoS experiment further shows that access control does not fully solve availability: a DDS/RTPS UDP flood caused short command-path interruptions even though it did not bypass authorization or permanently disable the robot. The network MITM work establishes an isolated bridge topology for layer-2 security experiments and shows the key security boundary: open traffic can be tampered with, while SROS2-protected traffic can still be delayed or dropped but cannot be validly rewritten without credential compromise.
 
 Overall, the project demonstrates that ROS2 robot security must be evaluated across multiple layers: application-level topic permissions, middleware authentication, network-path control, and eventually perception-data integrity.
