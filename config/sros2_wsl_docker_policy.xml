@@ -42,6 +42,65 @@
       </profiles>
     </enclave>
 
+    <enclave path="/mitm_controller">
+      <profiles>
+        <profile ns="/" node="mitm_controller_cmd_pub">
+          <topics publish="ALLOW">
+            <topic>/mitm_cmd</topic>
+            <topic>/rosout</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <topics subscribe="ALLOW">
+            <topic>/parameter_events</topic>
+          </topics>
+          <services reply="ALLOW">
+            <service>/*</service>
+          </services>
+          <services request="ALLOW">
+            <service>/*</service>
+          </services>
+        </profile>
+      </profiles>
+    </enclave>
+
+    <enclave path="/mitm_robot">
+      <profiles>
+        <profile ns="/" node="mitm_robot_cmd_sub">
+          <topics publish="ALLOW">
+            <topic>/rosout</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <topics subscribe="ALLOW">
+            <topic>/mitm_cmd</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <services reply="ALLOW">
+            <service>/*</service>
+          </services>
+          <services request="ALLOW">
+            <service>/*</service>
+          </services>
+        </profile>
+
+        <profile ns="/" node="mitm_robot_udp_forwarder">
+          <topics publish="ALLOW">
+            <topic>/rosout</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <topics subscribe="ALLOW">
+            <topic>/mitm_cmd</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <services reply="ALLOW">
+            <service>/*</service>
+          </services>
+          <services request="ALLOW">
+            <service>/*</service>
+          </services>
+        </profile>
+      </profiles>
+    </enclave>
+
     <enclave path="/gazebo">
       <profiles>
         <profile ns="/" node="cmd_vel_relay">
@@ -52,6 +111,23 @@
           </topics>
           <topics subscribe="ALLOW">
             <topic>/cmd_vel_in</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <services reply="ALLOW">
+            <service>/*</service>
+          </services>
+          <services request="ALLOW">
+            <service>/*</service>
+          </services>
+        </profile>
+
+        <profile ns="/" node="udp_cmd_vel_receiver">
+          <topics publish="ALLOW">
+            <topic>/cmd_vel_in</topic>
+            <topic>/rosout</topic>
+            <topic>/parameter_events</topic>
+          </topics>
+          <topics subscribe="ALLOW">
             <topic>/parameter_events</topic>
           </topics>
           <services reply="ALLOW">

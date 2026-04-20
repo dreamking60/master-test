@@ -18,7 +18,7 @@ fi
 echo "Generating SROS2 keystore and enclaves..."
 
 # Define nodes/enclaves
-ENCLAVES=("controller" "attacker" "gazebo")
+ENCLAVES=("controller" "attacker" "gazebo" "mitm_controller" "mitm_robot")
 
 # Prefer host ROS2 when available. Fall back to Docker for machines where only
 # the container image has ros2 security installed.
@@ -62,9 +62,9 @@ run_security_cmd "ros2 security create_keystore . || echo 'Keystore already exis
 
 echo "[2/3] Creating Enclaves and policy-based permissions..."
 if [ "$USE_DOCKER" -eq 1 ]; then
-  run_security_cmd "ROS_DOMAIN_ID=0 ros2 security generate_artifacts -k . -e /controller /attacker /gazebo -p /workspace/project/config/sros2_wsl_docker_policy.xml"
+  run_security_cmd "ROS_DOMAIN_ID=0 ros2 security generate_artifacts -k . -e /controller /attacker /gazebo /mitm_controller /mitm_robot -p /workspace/project/config/sros2_wsl_docker_policy.xml"
 else
-  run_security_cmd "ROS_DOMAIN_ID=0 ros2 security generate_artifacts -k . -e /controller /attacker /gazebo -p '$POLICY_FILE'"
+  run_security_cmd "ROS_DOMAIN_ID=0 ros2 security generate_artifacts -k . -e /controller /attacker /gazebo /mitm_controller /mitm_robot -p '$POLICY_FILE'"
 fi
 
 echo "Generated permissions summary:"

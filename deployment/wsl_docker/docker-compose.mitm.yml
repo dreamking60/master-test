@@ -16,6 +16,8 @@ services:
       ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
       ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
       ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+      ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
+      ROS_SECURITY_ENCLAVE_OVERRIDE: /mitm_controller
     volumes:
       - ../../:/workspace/project:rw
     working_dir: /workspace/project
@@ -40,6 +42,8 @@ services:
       ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
       ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
       ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+      ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
+      ROS_SECURITY_ENCLAVE_OVERRIDE: /mitm_robot
     volumes:
       - ../../:/workspace/project:rw
     working_dir: /workspace/project
@@ -70,6 +74,8 @@ services:
       ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
       ROS_SECURITY_ENABLE: ${ROS_SECURITY_ENABLE:-false}
       ROS_SECURITY_STRATEGY: ${ROS_SECURITY_STRATEGY:-Enforce}
+      ROS_SECURITY_KEYSTORE: /workspace/project/deployment/wsl_docker/keys
+      ROS_SECURITY_ENCLAVE_OVERRIDE: /attacker
     volumes:
       - ../../:/workspace/project:rw
     working_dir: /workspace/project
