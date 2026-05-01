@@ -60,6 +60,19 @@ cd attack_experiments
 python3 attack_cmd_vel_EN.py --attack forward --speed 0.5 --duration 10
 ```
 
+### 5. Command
+```bash
+  ./scripts/demo/tmux_three_machine_demo.sh open
+
+  ./scripts/demo/tmux_sros2_defense_demo.sh
+
+  ./scripts/demo/tmux_sros2_dos_demo.sh
+
+  ATTACK_DELAY_MS=500 ATTACK_LOSS_PERCENT=5 ATTACK_DURATION=45 MITM_TAMPER_ENABLE=1 ./scripts/demo/tmux_gazebo_mitm_demo.sh
+  
+  ATTACK_DELAY_MS=500 ATTACK_LOSS_PERCENT=5 ATTACK_DURATION=45 ./scripts/demo/tmux_sros2_gazebo_mitm_demo.sh
+```
+
 ## 📚 Documentation
 
 - **Environment Setup**: `docs/env.md` - Complete Ubuntu + ROS2 + TurtleBot3 environment setup guide

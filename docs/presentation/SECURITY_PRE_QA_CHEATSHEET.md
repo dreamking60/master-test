@@ -389,5 +389,44 @@ Docker NAT 本身就能做 ARP MITM。
 ```text
 SROS2 防止未授权发布和 payload 篡改，但不能单独解决 availability。
 MITM 在网络层仍然可以成立，但在 SROS2 下只能可靠造成 delay/drop，不能合法 rewrite command。
-Docker custom bridge 提供同一二层广播域和独立 MAC，是复现 ARP MITM 的关键。
+Docker custom bridge 提供同一二层广播域 and 独立 MAC，是复现 ARP MITM 的关键。
 ```
+
+## 10. 补充：基础概念与工具细节
+
+### Q36: 实验中那些 ROS 环境变量是什么意思？
+
+| 变量 | 作用 | 简单解释 |
+| --- | --- | --- |
+| `ROS_DOMAIN_ID=0` | **网络隔离** | 相同 ID 的节点才能通信，不同 ID 逻辑隔离。默认 0。 |
+| `RMW_IMPLEMENTATION=rmw_fastrtps_cpp` | **中间件选择** | 指定使用 eProsima FastDDS 作为底层通信库。 |
+| `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` | **传输协议限制** | 强制只用 IPv4 UDP，避免 Docker 环境下共享内存或 IPv6 导致通信失败。 |
+| `ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET` | **发现范围控制** | 限制在当前子网内自动寻找节点，不扫描其他网段。 |
+| `ROS_LOCALHOST_ONLY=0` | **跨机开关** | `0` 表示允许通过物理网卡进行跨容器/跨机器通信。 |
+
+### Q37: 安全三要素（SROS2 核心保护目标）的英文？
+
+1.  **机密性 (Confidentiality)**：确保信息不泄密（通过加密 Encryption 实现）。
+2.  **完整性 (Integrity)**：确保信息不被篡改（通过数字签名 Signatures 实现）。
+3.  **身份验证 (Authentication)**：证明你是谁（通过证书 Certificates 实现）。
+*注：DoS 破坏的是 **可用性 (Availability)**。*
+
+### Q38: 如果 SROS2 不能防 DoS，机器人网络靠什么防御？
+
+安全是分层的（Defense in Depth），不能只靠 SROS2：
+1.  **网络层隔离**：使用 VLAN 或 VPN（如 WireGuard）将机器人流量与外界物理隔绝。
+2.  **OS 级限流**：使用 `iptables` 或 `nftables` 限制 UDP 端口的入包速率。
+3.  **流量整形**：使用 Linux `tc` (Traffic Control) 为关键控制流预留带宽。
+4.  **DDS 资源限制**：在配置文件中设置 Resource Limits，防止内存被非法包耗尽。
+5.  **安全监控**：使用 IDS（入侵检测系统）识别异常的流量洪峰。
+
+### Q39: 你的 MITM 实验具体用了哪些工具？
+
+| 工具 | 实验中的具体应用代码 (Snippet) |
+| --- | --- |
+| **Scapy** (ARP 欺骗) | `packet = ARP(op=2, pdst=target.ip, hwdst=target.mac, psrc=spoof_ip); send(packet)` |
+| **tc + netem** (延迟) | `sudo tc qdisc add dev eth0 root netem delay "${DELAY_MS}ms"` |
+| **rclpy** (消息转发) | `self.sub = self.create_subscription(TwistStamped, self.topic, self.cb, 50)` |
+| **sysctl** (内核转发) | `sysctl -w net.ipv4.ip_forward=1` |
+| **Docker Compose** | 用于隔离 `attacker`、`controller` 和 `robot` 的网络命名空间。 |
+

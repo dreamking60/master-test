@@ -1,4 +1,4 @@
-# Final Report Draft: ROS2 Security Evaluation on TurtleBot3
+# ROS2 Cybersecurity Analysis and Defense
 
 Steven Chen
 
@@ -14,6 +14,22 @@ The original experimental environment used multiple virtual machines. During the
 - Docker 1: Controller Docker
 - Docker 2: Attacker Docker
 
+### 1.1 Technical Background
+
+ROS2 is the communication framework used by this project. In ROS2, processes are organized as a ROS graph of nodes that communicate through topics, services, actions, and parameters. ROS2 nodes are independent computational processes in the graph [1], and topics provide strongly typed publish/subscribe communication between nodes [2]. This is why command topics such as `/cmd_vel` are security-critical: any node that can publish valid velocity messages into the command path may influence robot motion.
+
+ROS2 communication is implemented through a middleware abstraction called RMW. In this project the selected RMW implementation is `rmw_fastrtps_cpp`, which uses eProsima Fast DDS. ROS2 commonly uses DDS/RTPS middleware for discovery, serialization, and transport. The ROS2 middleware documentation explains the role of different DDS/RTPS vendors in ROS2 communication [3]. This matters for the DoS and MITM experiments because the attacks target the DDS/RTPS communication layer rather than only ROS2 application code.
+
+DDS Security is the security standard used underneath ROS2 security. The OMG DDS Security specification defines security plugin interfaces for authentication, access control, cryptographic operations, logging, and data tagging [4]. These functions map directly to the security goals evaluated in this project: authenticating legitimate participants, restricting topic access, protecting message integrity, and preventing unauthorized payload modification.
+
+SROS2 is the ROS2 tooling and runtime integration that enables DDS Security for ROS2 systems. The ROS2 security documentation explains that ROS2 security uses middleware security plugins and configuration files to enable encryption, authentication, and policy-based access control for ROS graph participants [5]. The SROS2 setup tutorial states that the `sros2` package provides tools for using ROS2 on top of DDS Security [6]. In this project, SROS2 is configured through a keystore, security enclaves, signed permissions, and environment variables such as `ROS_SECURITY_ENABLE`, `ROS_SECURITY_STRATEGY`, and `ROS_SECURITY_KEYSTORE`.
+
+Security enclaves are important to the experimental design. A security enclave defines the identity and permission boundary for one or more ROS2 processes. The ROS2 security documentation describes enclaves as policies that can protect ROS communications for nodes, processes, users, devices, or an entire graph [5]. This project uses separate enclaves such as `/controller`, `/attacker`, `/gazebo`, `/mitm_controller`, and `/mitm_robot` to test whether SROS2 can distinguish legitimate command publishers from unauthorized attackers.
+
+Gazebo is the robot simulation environment used to make the security effects observable as physical robot behavior. ROS2 provides Gazebo integration tutorials for launching robot simulations [7], and this project uses `ros_gz_bridge` to bridge ROS topics and Gazebo Transport topics between the ROS2 command path and the simulated TurtleBot3 [8].
+
+The network MITM experiments use standard layer-2 and Linux networking mechanisms. ARP is the protocol that maps network-layer addresses to Ethernet hardware addresses [9], so ARP cache poisoning can place an attacker on the packet path in a shared layer-2 network. The project implements the ARP poisoner with Scapy packet crafting [10], applies delay and packet loss with Linux `tc netem` [11], records packet-path evidence with `tcpdump` [12], and isolates the attacker, controller, and robot endpoints with Docker bridge networking [13].
+
 ## 2. Project Goals
 
 The project has four main goals:
@@ -24,7 +40,7 @@ The project has four main goals:
 4. Prepare a network-layer MITM experiment using an isolated Docker bridge topology.
 5. Define future work for SLAM and perception-data security.
 
-The project is not only an attack demonstration. The larger objective is to build a repeatable research workflow that can compare insecure and secure robot configurations.
+The project is not only an attack experiment, instead, it is an security analysis project over ROS2 and turtlebot3. The larger objective is to build a repeatable research workflow that can compare insecure and secure robot configurations.
 
 ## 3. System Architecture
 
@@ -68,7 +84,7 @@ The relay was introduced because direct DDS communication from Docker containers
 
 ### 3.3 Environment Configuration
 
-The stable configuration uses:
+The Configuration Environment Variable is:
 
 ```text
 ROS_DOMAIN_ID=0
@@ -78,7 +94,7 @@ ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 ROS_LOCALHOST_ONLY=0
 ```
 
-The final scripts are organized under:
+The final scripts are organized as follows:
 
 - `scripts/setup/`
 - `scripts/wsl_docker/`
@@ -86,21 +102,21 @@ The final scripts are organized under:
 - `experiments/`
 - `deployment/wsl_docker/`
 
-To avoid competence and pollution between different experiments, the demo scripts run a shared cleanup step before starting. The cleanup script stops old tmux sessions, Docker containers, Gazebo processes, relay processes, and resets the ROS2 daemon.
+To avoid competence and pollution between different experiment's envrionment, the demo scripts run a shared cleanup step before starting. The cleanup script stops old tmux sessions, Docker containers, Gazebo processes, relay processes, and resets the ROS2 daemon.
 
 ## 4. Experiment 1: Open ROS2 `/cmd_vel` Injection
 
 ### 4.1 Purpose
 
-This experiment demonstrates that an unsecured ROS2 graph allows an unauthorized node to publish robot motion commands.
+The experiment is to verify an unsecured ROS2 graph allows an unauthorized node to publish robot motion commands. This design follows directly from the ROS2 topic model: command messages are exchanged through publish/subscribe topics [2]. If no authentication or access-control layer is enabled, the experiment tests whether another discovered publisher can influence the same command path.
 
 ### 4.2 Threat Model
 
-The attacker can join the same ROS2 domain as the controller and robot. SROS2 is disabled. The attacker does not need a certificate or permission file.
+The attacker can join the same ROS2 domain as the controller and robot. SROS2 is disabled, so the ROS2 Security keystore, enclave identity, and permission checks are not active [5][6]. The attacker does not need a certificate or permission file.
 
 ### 4.3 Method
 
-The controller publishes forward velocity commands at 10 Hz. The attacker publishes turn commands at 50 Hz. Both publish into the command path through `/cmd_vel_in`, and the host relay forwards the resulting stream to `/cmd_vel`.
+The controller publishes forward velocity commands at 10 Hz. The attacker publishes turn commands at 50 Hz. Both publish into the command path through `/cmd_vel_in`, and the host relay forwards the resulting stream to `/cmd_vel`. Gazebo consumes the final command stream through the ROS-Gazebo bridge, which connects ROS topics to Gazebo Transport topics [8].
 
 The experiment can be launched with:
 
@@ -116,23 +132,23 @@ The tmux demo shows three roles:
 
 ### 4.4 Expected and Observed Result
 
-The expected normal behavior is straight forward movement. When the attacker starts, the robot trajectory should deviate because turn commands are injected at a higher frequency.
+The expected normal behavior is straight forward movement. When the attacker starts, the robot will show a different running routes because turn commands are injected at a higher frequency.
 
-This experiment has been verified in the migrated WSL + Docker environment. The successful relay logs show that container-generated commands are reaching the Gazebo control path.
+The experiment result shows that when the robots starts at first, the robots runs through a correct routes and seems normal. But when we start our attacker, since our attacker has a higher frequency speed of commands, the robots can't go striaght and instead, it will replay a turn movement at a points.
 
 ### 4.5 Security Finding
 
-Default ROS2 communication does not prevent another discovered node from publishing to a critical command topic. Without authentication and authorization, the robot command path is open to unauthorized publishers.
+Default ROS2 communication does not prevent another discovered node from publishing to a critical command topic. Without authentication and authorization, the robot command path is open to unauthorized publishers. So a security robots network require a security configuration and if we use it as a normal ROS2 robots, we can only use without a outer network and only with its own loop-back network.
 
 ## 5. Experiment 2: SROS2 `/cmd_vel` Access-Control Defense
 
 ### 5.1 Purpose
 
-This experiment evaluates whether SROS2 can prevent unauthorized command injection while still allowing legitimate control.
+This experiment evaluates whether SROS2 can prevent unauthorized command injection while still allowing legitimate control. The design is based on DDS Security, which provides authentication, access control, and cryptographic protection underneath ROS2 security [4][5].
 
 ### 5.2 Threat Model
 
-The attacker may still run in the same ROS2 domain, but the system uses SROS2 with enforced security. The controller has permission to publish command input. The attacker does not have permission to publish command topics.
+The attacker may still run in the same ROS2 domain, but the system uses SROS2 with enforced security. The controller has permission to publish command input. The attacker does not have permission to publish command topics. This directly tests SROS2's policy-based authorization rather than only encryption [5][6].
 
 ### 5.3 Policy Design
 
@@ -142,7 +158,7 @@ The migrated policy file is:
 config/sros2_wsl_docker_policy.xml
 ```
 
-The policy defines three enclaves:
+The policy defines three enclaves. Enclaves are used because ROS2 security policies are attached to runtime identities and permission boundaries [5]:
 
 | Enclave | Role | Permission |
 | --- | --- | --- |
@@ -210,15 +226,17 @@ The SROS2 experiment has been migrated and validated in the WSL + Docker environ
 
 SROS2 changes the ROS2 graph from an open publication model to an authenticated and permission-controlled model. The important defense is not only encryption, but also authorization: only the controller enclave should be allowed to publish command input.
 
+But we wander know if a SROS2 can defend robots from other kinds of attack but not only some command injection.
+
 ## 6. Experiment 3: SROS2 UDP DoS / Availability Test
 
 ### 6.1 Purpose
 
-The SROS2 access-control experiment shows that an unauthorized attacker can be blocked from publishing robot commands. However, authentication and authorization do not automatically guarantee availability. This experiment tests whether a separate attacker container can degrade the SROS2-secured control path by flooding local DDS/RTPS UDP ports.
+The SROS2 access-control experiment shows that an unauthorized attacker can be blocked from publishing robot commands. However, authentication and authorization do not automatically guarantee availability. This experiment tests whether a separate attacker container can degrade the SROS2-secured control path by flooding local DDS/RTPS UDP ports. The reason for targeting this layer is that ROS2 communication is implemented through DDS/RTPS middleware [3], while SROS2 protects identity, permissions, and message security rather than acting as a general network-rate limiter [5].
 
 ### 6.2 Threat Model
 
-The controller and Gazebo/relay use SROS2 in enforcement mode. The attacker does not try to create a valid command publisher. Instead, it sends high-rate RTPS-like UDP packets toward DDS ports in the local WSL + Docker lab. The objective is not to bypass SROS2 permissions, but to test whether malformed or excessive DDS-layer traffic can cause resource pressure or control delay.
+The controller and Gazebo/relay use SROS2 in enforcement mode. The attacker does not try to create a valid command publisher. Instead, it sends high-rate RTPS-like UDP packets toward DDS ports in the local WSL + Docker lab. The objective is not to bypass SROS2 permissions, but to test whether malformed or excessive DDS-layer traffic can cause resource pressure or control delay. This separates authorization failure from availability degradation, which is important because DDS Security and SROS2 are not substitutes for network resource controls [4][5].
 
 ### 6.3 Method
 
@@ -328,7 +346,7 @@ SROS2 is effective for access control, but it is not a complete availability def
 
 ### 7.1 Purpose
 
-This experiment studies a stronger network attacker who attempts to position itself between the controller and robot.
+This experiment studies a stronger network attacker who attempts to position itself between the controller and robot. The experiment is based on ARP behavior: ARP maps IP addresses to Ethernet hardware addresses, so forged ARP replies can redirect traffic through an attacker in a shared layer-2 network [9].
 
 ### 7.2 Difference from Experiment 1
 
@@ -344,7 +362,7 @@ Experiment 3 is network-path manipulation:
 attacker attempts to become the path between controller and robot
 ```
 
-This distinction matters because ARP spoofing requires separate layer-2 identities. Docker `network_mode: host` is not appropriate for that attack model.
+This distinction matters because ARP spoofing requires separate layer-2 identities. Docker `network_mode: host` is not appropriate for that attack model; Docker bridge networking is used because it gives the controller, robot, and attacker separate container endpoints on the same virtual bridge [13].
 
 ### 7.3 Migrated Docker Bridge Lab
 
@@ -362,7 +380,7 @@ It creates three endpoints:
 | `tb3-mitm-robot` | target endpoint | `172.28.0.20` |
 | `tb3-mitm-attacker` | MITM endpoint | `172.28.0.50` |
 
-The MITM lab uses Docker bridge/NAT networking rather than Docker host networking. This is necessary because ARP poisoning requires separate layer-2 identities. The tmux demo is:
+The MITM lab uses Docker bridge/NAT networking rather than Docker host networking. This is necessary because ARP poisoning requires separate layer-2 identities [9][13]. The tmux demo is:
 
 ```bash
 ./experiments/03_network_mitm/run_demo.sh
@@ -370,7 +388,7 @@ The MITM lab uses Docker bridge/NAT networking rather than Docker host networkin
 
 ### 7.4 ARP Helper and Attack Path
 
-A constrained ARP helper was added:
+A constrained ARP helper was added. It uses Scapy to craft and send ARP packets, rather than relying on an external ARP-spoofing tool [10]:
 
 ```text
 experiments/03_network_mitm/arp_poison_lab.py
@@ -403,7 +421,7 @@ controller 172.28.0.10
   -> robot endpoint 172.28.0.20
 ```
 
-The attacker enables IPv4 forwarding so the connection remains alive, then applies `tc netem` delay/loss to degrade traffic passing through it. This distinguishes a stable MITM from a simple denial of service: the attacker forwards traffic while modifying timing and reliability.
+The attacker enables IPv4 forwarding so the connection remains alive, then applies `tc netem` delay/loss to degrade traffic passing through it [11]. This distinguishes a stable MITM from a simple denial of service: the attacker forwards traffic while modifying timing and reliability.
 
 ### 7.5 Open ROS2 MITM Result
 
@@ -423,7 +441,7 @@ Key observations:
 | ROS2 command max-latency observed | `2335.0 ms` |
 | ROS2 max command gap | `1418.9 ms` |
 
-ARP evidence confirmed that during the attack the controller's ARP table mapped the robot IP to the attacker MAC, and the robot's ARP table mapped the controller IP to the attacker MAC. The attacker also recorded forwarded ICMP and DDS/RTPS UDP traffic. This validates that the attacker was positioned in the communication path and could degrade ROS2 command timing.
+ARP evidence confirmed that during the attack the controller's ARP table mapped the robot IP to the attacker MAC, and the robot's ARP table mapped the controller IP to the attacker MAC. The attacker also recorded forwarded ICMP and DDS/RTPS UDP traffic with `tcpdump` [12]. This validates that the attacker was positioned in the communication path and could degrade ROS2 command timing.
 
 ### 7.6 SROS2-Protected MITM Result
 
@@ -457,7 +475,7 @@ Measured impact:
 | SROS2 `/mitm_cmd` max-latency observed | `2174.5 ms` |
 | SROS2 max command gap | `2531.3 ms` |
 
-The result supports a layered security conclusion. SROS2 does not prevent ARP poisoning itself, because ARP is below ROS2/DDS Security. However, DDS Security prevents a normal network-path attacker from rewriting protected command payloads into valid commands. The attacker can still delay or drop encrypted DDS/RTPS packets, causing availability degradation.
+The result supports a layered security conclusion. SROS2 does not prevent ARP poisoning itself, because ARP is below ROS2/DDS Security [9]. However, DDS Security prevents a normal network-path attacker from rewriting protected command payloads into valid commands [4]. The attacker can still delay or drop encrypted DDS/RTPS packets, causing availability degradation.
 
 ### 7.7 SROS2 Gazebo MITM Visual Result
 
@@ -542,6 +560,40 @@ The project has several limitations:
 
 ## 11. Conclusion
 
-The project successfully migrated a ROS2 TurtleBot3 security workflow from a difficult multi-VM setup to a more maintainable WSL + Docker environment. The migrated system preserves the key security roles while keeping Gazebo visible on the host. The open ROS2 injection experiment demonstrates the risk of unauthenticated command topics. The SROS2 defense work shows how enclave-based permissions can restrict command publishers. The SROS2 DoS experiment further shows that access control does not fully solve availability: a DDS/RTPS UDP flood caused short command-path interruptions even though it did not bypass authorization or permanently disable the robot. The network MITM work establishes an isolated bridge topology for layer-2 security experiments and shows the key security boundary: open traffic can be tampered with, while SROS2-protected traffic can still be delayed or dropped but cannot be validly rewritten without credential compromise.
+This project analyzed the security of a ROS2 TurtleBot3 command-control system through a sequence of controlled experiments. The main objective was not simply to migrate an environment, but to evaluate what attacks are possible against ROS2 robot command traffic, what SROS2 can prevent, and where SROS2's protection boundary ends. The WSL + Docker environment was used as the experimental platform because it makes the controller, attacker, robot endpoint, and Gazebo simulation roles repeatable and observable.
 
-Overall, the project demonstrates that ROS2 robot security must be evaluated across multiple layers: application-level topic permissions, middleware authentication, network-path control, and eventually perception-data integrity.
+The experiments show that an unsecured ROS2 command path is vulnerable to unauthorized publication. In the open ROS2 configuration, an attacker that can join the ROS2 graph can publish competing velocity commands and influence robot motion. This confirms that command topics such as `/cmd_vel` require explicit security controls in cyber-physical robot systems.
+
+The SROS2 access-control experiment shows that DDS Security and enclave-based permissions can effectively block unauthorized command publishers. When the controller enclave is allowed to publish command input and the attacker enclave is not, the attacker cannot create a valid command publisher. This supports the conclusion that SROS2 is effective for authentication, authorization, and command-message integrity.
+
+However, the availability experiments show that SROS2 is not a complete security solution by itself. The DDS/RTPS UDP flood did not bypass SROS2 permissions, but it caused short command-path interruptions and triggered the relay watchdog. Similarly, ARP-based MITM experiments show that SROS2 does not prevent a network-path attacker from delaying or dropping encrypted DDS traffic. In the SROS2 MITM setting, the attacker could degrade timing and availability, but could not validly rewrite protected command payloads without credential compromise or policy misconfiguration.
+
+Overall, the project demonstrates that ROS2 robot security must be analyzed as a layered problem. SROS2 is important and effective for identity, access control, and message integrity, but it must be combined with network-layer protections, resource controls, monitoring, and safety watchdogs. Future security analysis should extend beyond command topics to perception and localization topics such as `/scan`, `/odom`, `/tf`, maps, and camera streams, because those data channels also affect robot behavior and safety.
+
+## References
+
+[1] ROS 2 Documentation, "Nodes", ROS 2 Kilted documentation. Available: <https://docs.ros.org/en/kilted/Concepts/Basic/About-Nodes.html>
+
+[2] ROS 2 Documentation, "Topics", ROS 2 Kilted documentation. Available: <https://docs.ros.org/en/kilted/Concepts/Basic/About-Topics.html>
+
+[3] ROS 2 Documentation, "Different ROS 2 middleware vendors", ROS 2 Kilted documentation. Available: <https://docs.ros.org/en/ros2_documentation/kilted/Concepts/Intermediate/About-Different-Middleware-Vendors.html>
+
+[4] Object Management Group, "DDS-SECURITY - DDS Security", Version 1.2, February 2026. Available: <https://www.omg.org/spec/DDS-SECURITY/>
+
+[5] ROS 2 Documentation, "ROS 2 Security", ROS 2 Kilted documentation. Available: <https://docs.ros.org/en/kilted/Concepts/Intermediate/About-Security.html>
+
+[6] ROS 2 Documentation, "Setting up security", ROS 2 Jazzy documentation. Available: <https://docs.ros.org/en/jazzy/Tutorials/Advanced/Security/Introducing-ros2-security.html>
+
+[7] ROS 2 Documentation, "Setting up a robot simulation, Gazebo", ROS 2 Jazzy documentation. Available: <https://docs.ros.org/en/jazzy/Tutorials/Advanced/Simulators/Gazebo/Gazebo.html>
+
+[8] ROS 2 Package Documentation, "ros_gz_bridge", Jazzy package documentation. Available: <https://docs.ros.org/en/jazzy/p/ros_gz_bridge/>
+
+[9] D. C. Plummer, "An Ethernet Address Resolution Protocol", RFC 826. Available: <https://www.rfc-editor.org/rfc/rfc826>
+
+[10] Scapy Documentation, "Usage". Available: <https://scapy.readthedocs.io/en/latest/usage.html>
+
+[11] Linux manual page, "tc-netem(8)". Available: <https://man7.org/linux/man-pages/man8/tc-netem.8.html>
+
+[12] tcpdump/libpcap Documentation, "tcpdump(1)". Available: <https://www.tcpdump.org/manpages/tcpdump.1.html>
+
+[13] Docker Documentation, "Bridge network driver". Available: <https://docs.docker.com/engine/network/drivers/bridge/>
